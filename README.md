@@ -191,13 +191,21 @@ Please ensure your code:
 
 ## 📄 License
 
-[Your chosen license]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+The MIT License is a permissive license that allows for:
+- Commercial use
+- Modification
+- Distribution
+- Private use
+
+The only requirement is that the license and copyright notice must be included in all copies or substantial portions of the software.
 
 ## 🙏 Acknowledgments
 
 - Astropy community for their excellent documentation
 - Simbad database for providing star identification data
-- All contributors who have helped improve this project
+- All the genius that helped answer my questions
 
 ---
 
