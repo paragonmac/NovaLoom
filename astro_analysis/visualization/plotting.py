@@ -2,35 +2,55 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from astropy.visualization import ZScaleInterval
+from astropy.wcs import WCS
+from astropy.io.fits import Header
+from typing import Optional, Union
+from matplotlib.figure import Figure
 
-def plot_image_with_labels(data, sources_df, wcs, header, fits_file_path, 
-                          label_fontsize=7, label_color='cyan', cmap='magma'):
+def plot_image_with_labels(
+    data: np.ndarray,
+    sources_df: pd.DataFrame,
+    wcs: WCS,
+    header: Header,
+    fits_file_path: str,
+    label_fontsize: int = 7,
+    label_color: str = 'cyan',
+    cmap: str = 'magma'
+) -> Figure:
     """
     Create a plot of the image with labeled sources.
     
-    Parameters:
-    -----------
-    data : numpy.ndarray
+    Parameters
+    ----------
+    data : np.ndarray
         The image data
-    sources_df : pandas.DataFrame
+    sources_df : pd.DataFrame
         DataFrame containing source information
-    wcs : astropy.wcs.WCS
+    wcs : WCS
         WCS object for coordinate transformation
-    header : astropy.io.fits.header.Header
+    header : Header
         FITS header
     fits_file_path : str
         Path to the FITS file
-    label_fontsize : int
-        Font size for labels
-    label_color : str
-        Color for labels
-    cmap : str
-        Colormap for the image
+    label_fontsize : int, optional
+        Font size for labels, defaults to 7
+    label_color : str, optional
+        Color for labels, defaults to 'cyan'
+    cmap : str, optional
+        Colormap for the image, defaults to 'magma'
         
-    Returns:
-    --------
-    matplotlib.figure.Figure
+    Returns
+    -------
+    Figure
         The created figure
+        
+    Notes
+    -----
+    The function creates a plot with:
+    - The image displayed using the specified colormap
+    - Labels for sources that have valid Simbad names
+    - Proper WCS coordinate display if available
+    - Grid lines and axis labels
     """
     fig = plt.figure(figsize=(15, 15))
     
@@ -50,6 +70,8 @@ def plot_image_with_labels(data, sources_df, wcs, header, fits_file_path,
     else:
         vmin, vmax = 0, 1
         
+    print(f"Displaying image with colormap '{cmap}' (vmin={vmin:.2f}, vmax={vmax:.2f})")
+        
     # Display image
     ax.imshow(data, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax, 
               interpolation='nearest')
@@ -57,17 +79,20 @@ def plot_image_with_labels(data, sources_df, wcs, header, fits_file_path,
     # Add labels for sources
     labeled_count = 0
     for index, source in sources_df.iterrows():
-        simbad_name = source['simbad_name']
-        if pd.notna(simbad_name) and simbad_name != "Query Error":
-            x_pos = source['xcentroid']
-            y_pos = source['ycentroid']
+        # Use source ID as label if Simbad name is not available
+        label = f"Source {int(source['id'])}"
+        if 'simbad_name' in source and pd.notna(source['simbad_name']) and source['simbad_name'] != "Query Error":
+            label = source['simbad_name']
             
-            ax.text(x_pos + 5, y_pos + 5, simbad_name,
-                   color=label_color, fontsize=label_fontsize,
-                   ha='left', va='bottom',
-                   bbox=dict(boxstyle='round,pad=0.1', fc='black', 
-                            alpha=0.5, ec='none'))
-            labeled_count += 1
+        x_pos = source['xcentroid']
+        y_pos = source['ycentroid']
+        
+        ax.text(x_pos + 5, y_pos + 5, label,
+               color=label_color, fontsize=label_fontsize,
+               ha='left', va='bottom',
+               bbox=dict(boxstyle='round,pad=0.1', fc='black', 
+                        alpha=0.5, ec='none'))
+        labeled_count += 1
             
     # Add axis labels
     if wcs_enabled:
@@ -82,7 +107,7 @@ def plot_image_with_labels(data, sources_df, wcs, header, fits_file_path,
     # Add title
     object_name = header.get('OBJECT', 'Field')
     ax.set_title(f"{object_name} ({fits_file_path.split('/')[-1]})\n"
-                f"{labeled_count} Sources Labeled (Simbad Identification)")
+                f"{labeled_count} Sources Labeled")
                 
     plt.tight_layout()
     return fig 

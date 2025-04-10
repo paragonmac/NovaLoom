@@ -13,16 +13,16 @@ except Exception as e:
     print(f"Error importing settings: {e}")
 
 try:
-    from astro_analysis.scripts.load_fits import load_fits_file
-    print("\nSuccessfully imported load_fits")
+    from astro_analysis.data_processing.fits_loader import load_fits_file
+    print("\nSuccessfully imported fits_loader")
 except Exception as e:
-    print(f"Error importing load_fits: {e}")
+    print(f"Error importing fits_loader: {e}")
 
 try:
-    from astro_analysis.scripts.display_section import display_section
-    print("Successfully imported display_section")
+    from astro_analysis.visualization.plotting import plot_image_with_labels
+    print("Successfully imported plotting")
 except Exception as e:
-    print(f"Error importing display_section: {e}")
+    print(f"Error importing plotting: {e}")
 
 print("\nCurrent directory structure:")
 for root, dirs, files in os.walk("astro_analysis"):

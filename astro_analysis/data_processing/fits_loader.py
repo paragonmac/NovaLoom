@@ -1,20 +1,33 @@
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
+from typing import Tuple, Optional, Union, Any
 
-def load_fits_file(fits_file_path):
+def load_fits_file(fits_file_path: str) -> Tuple[np.ndarray, fits.header.Header, WCS]:
     """
     Load and process a FITS file.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     fits_file_path : str
         Path to the FITS file
         
-    Returns:
-    --------
-    tuple
-        (data, header, wcs) - The processed data, header, and WCS object
+    Returns
+    -------
+    Tuple[np.ndarray, fits.header.Header, WCS]
+        A tuple containing:
+        - data: The processed image data as a numpy array
+        - header: The FITS header
+        - wcs: The WCS object for coordinate transformation
+        
+    Raises
+    ------
+    FileNotFoundError
+        If the FITS file cannot be found
+    ValueError
+        If no valid image HDU is found or if the data is not 2-dimensional
+    Exception
+        For other errors during file loading or processing
     """
     try:
         with fits.open(fits_file_path) as hdul:

@@ -1,7 +1,11 @@
 import astropy.units as u
+import os
+
+# Get the project root directory (two levels up from this file)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # FITS file configuration
-FITS_FILE_PATH = 'Data/Light_M42_180.0s_Bin1_0016.fit'
+FITS_FILE_PATH = os.path.join(PROJECT_ROOT, 'Data', 'Light_M42_180.0s_Bin1_0016.fit')
 
 # Source Detection Parameters
 SOURCE_FWHM_ESTIMATE = 5.0  # Estimated star Full-Width Half-Max in pixels

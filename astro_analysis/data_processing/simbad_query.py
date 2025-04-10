@@ -1,28 +1,43 @@
 import time
 import pandas as pd
 from astroquery.simbad import Simbad
+from astropy.coordinates import SkyCoord
+from typing import List, Optional, Union
+from astropy.units import Quantity
 
-def query_simbad(world_coords, sources_df, search_radius, timeout, min_flux=0):
+def query_simbad(
+    world_coords: List[SkyCoord],
+    sources_df: pd.DataFrame,
+    search_radius: Quantity,
+    timeout: int,
+    min_flux: float = 0
+) -> pd.DataFrame:
     """
     Query Simbad for star names and object types.
     
-    Parameters:
-    -----------
-    world_coords : list
+    Parameters
+    ----------
+    world_coords : List[SkyCoord]
         List of SkyCoord objects
-    sources_df : pandas.DataFrame
+    sources_df : pd.DataFrame
         DataFrame containing source information
-    search_radius : astropy.units.Quantity
+    search_radius : Quantity
         Search radius for Simbad queries
     timeout : int
         Timeout in seconds for Simbad queries
-    min_flux : float
-        Minimum flux threshold for querying sources
+    min_flux : float, optional
+        Minimum flux threshold for querying sources, defaults to 0
         
-    Returns:
-    --------
-    pandas.DataFrame
+    Returns
+    -------
+    pd.DataFrame
         Updated DataFrame with Simbad information
+        
+    Notes
+    -----
+    This function adds two new columns to the DataFrame:
+    - simbad_name: The name of the object from Simbad
+    - simbad_otype: The object type from Simbad
     """
     Simbad.TIMEOUT = timeout
     Simbad.add_votable_fields('otype(V)')

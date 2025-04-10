@@ -2,24 +2,32 @@ import numpy as np
 from astropy.stats import SigmaClip, mad_std
 from photutils.detection import DAOStarFinder
 from photutils.background import Background2D, MedianBackground
+from typing import Tuple, Optional, Union
+from astropy.table import Table
 
-def estimate_background(data, box_size, filter_size):
+def estimate_background(
+    data: np.ndarray,
+    box_size: Tuple[int, int],
+    filter_size: Tuple[int, int]
+) -> Tuple[np.ndarray, float]:
     """
     Estimate the background of the image.
     
-    Parameters:
-    -----------
-    data : numpy.ndarray
+    Parameters
+    ----------
+    data : np.ndarray
         The image data
-    box_size : tuple
+    box_size : Tuple[int, int]
         Size of boxes for background estimation
-    filter_size : tuple
+    filter_size : Tuple[int, int]
         Size of median filter for background smoothing
         
-    Returns:
-    --------
-    tuple
-        (background_subtracted_data, noise_std)
+    Returns
+    -------
+    Tuple[np.ndarray, float]
+        A tuple containing:
+        - background_subtracted_data: The data with background subtracted
+        - noise_std: The standard deviation of the noise
     """
     try:
         sigma_clip_bg = SigmaClip(sigma=3.0)
@@ -50,23 +58,34 @@ def estimate_background(data, box_size, filter_size):
         noise_std = mad_std(data[np.isfinite(data)])
         return data, noise_std
 
-def detect_sources(data, fwhm, threshold):
+def detect_sources(
+    data: np.ndarray,
+    fwhm: float,
+    threshold: float
+) -> Table:
     """
     Detect sources in the image using DAOStarFinder.
     
-    Parameters:
-    -----------
-    data : numpy.ndarray
+    Parameters
+    ----------
+    data : np.ndarray
         The image data (background subtracted)
     fwhm : float
         Expected star Full-Width Half-Max in pixels
     threshold : float
         Detection threshold above background noise
         
-    Returns:
-    --------
-    astropy.table.Table
+    Returns
+    -------
+    Table
         Table of detected sources
+        
+    Raises
+    ------
+    ValueError
+        If the threshold is not positive or if no sources are found
+    Exception
+        For other errors during source detection
     """
     try:
         if threshold <= 0:

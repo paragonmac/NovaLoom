@@ -14,6 +14,7 @@ from matplotlib.colors import LogNorm
 # Add the parent directory to the path so we can import from astro_analysis
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import FITS_FILE_PATH
+from astro_analysis.lib.load_fits import load_fits_file
 
 def display_section(image_data, x_start=1500, x_end=2500, y_start=2500, y_end=3500, 
                    cmap='Greys', save_path=None):
@@ -55,9 +56,8 @@ def display_section(image_data, x_start=1500, x_end=2500, y_start=2500, y_end=35
     return section
 
 if __name__ == "__main__":
-    # Import the load_fits_file function from the previous script
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from astro_analysis.scripts.01_load_fits import load_fits_file
+    # Import the load_fits_file function
+    from astro_analysis.lib.load_fits import load_fits_file
     
     # Load the FITS file
     fits_file, image_data = load_fits_file()

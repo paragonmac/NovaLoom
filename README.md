@@ -28,18 +28,18 @@ Before you begin, ensure you have the following installed:
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd astro_analysis
+   cd NovaLoom
    ```
 
 2. **Set up a virtual environment** (strongly recommended)
    ```bash
    # On Windows:
-   python -m venv venv
-   venv\Scripts\activate
+   python -m venv .venv
+   .venv\Scripts\activate
 
    # On macOS/Linux:
-   python -m venv venv
-   source venv/bin/activate
+   python -m venv .venv
+   source .venv/bin/activate
    ```
 
 3. **Install dependencies**
@@ -55,83 +55,88 @@ Before you begin, ensure you have the following installed:
 
 ## 📋 Usage Guide
 
-### 1. Preparing Your Data
+### For End Users (Just Want to Run the Program)
 
-1. Place your FITS file in the appropriate directory
-   - Default location: `Data/Light_M42_180.0s_Bin1_0016.fit`
-   - Supported formats: Standard FITS files with WCS information
-
-2. Configure your settings in `config/settings.py`:
-   ```python
-   FITS_FILE_PATH = "path/to/your/fits/file.fit"
-   SOURCE_DETECTION_THRESHOLD = 3.0  # Adjust based on your image
-   SIMBAD_QUERY_RADIUS = 5.0  # Arcseconds
-   ```
-
-### 2. Running the Analysis
-
-You can run the complete analysis pipeline using:
-```bash
-python -m astro_analysis.scripts.main
-```
-
-Or run individual components:
-
-1. **Load and display FITS file**
-   ```bash
-   python -m astro_analysis.scripts.load_fits
-   ```
-
-2. **Display a section of the image**
-   ```bash
-   python -m astro_analysis.scripts.display_section
-   ```
-
-3. **Detect stars**
-   ```bash
-   python -m astro_analysis.scripts.detect_stars
-   ```
-
-4. **Visualize detected stars**
-   ```bash
-   python -m astro_analysis.scripts.visualize_stars
-   ```
-
-5. **Create 3D visualization**
-   ```bash
-   python -m astro_analysis.scripts.visualize_3d
-   ```
-
-### 3. Understanding the Output
-
-- The analysis will generate several output files:
-  - `detected_sources.csv`: List of detected sources with coordinates
-  - `identified_sources.csv`: Sources matched with Simbad database
-  - Various visualization plots (PNG format)
-
-## 📁 Project Structure
+If you just want to use the program to analyze your astronomical images, you only need to interact with these files:
 
 ```
 astro_analysis/
-├── config/
-│   └── settings.py         # Configuration parameters
-├── data_processing/
-│   ├── fits_loader.py      # FITS file loading and processing
-│   ├── star_detection.py   # Star detection algorithms
-│   └── simbad_query.py     # Simbad database interaction
-├── utils/
-│   ├── warnings.py         # Warning configuration
-│   └── test_imports.py     # Import testing utility
-├── visualization/
-│   └── plotting.py         # Plotting functions
-└── scripts/
-    ├── main.py            # Main analysis pipeline
-    ├── load_fits.py       # FITS file loading script
-    ├── display_section.py # Image section display
-    ├── detect_stars.py    # Star detection script
-    ├── visualize_stars.py # Star visualization
-    └── visualize_3d.py    # 3D visualization
+├── config/                    # Configuration settings
+│   └── settings.py           # Edit this to configure your analysis
+└── scripts/                  # Run these scripts to perform analysis
+    ├── main.py              # Run this for complete analysis
+    ├── load_fits.py         # Run this to load and check FITS files
+    ├── display_section.py   # Run this to view image sections
+    ├── detect_stars.py      # Run this to detect stars
+    ├── calculate_stats.py   # Run this for statistical analysis
+    ├── visualize_stars.py   # Run this to visualize stars
+    └── visualize_3d.py      # Run this for 3D visualization
 ```
+
+### For Developers (Want to Modify the Code)
+
+If you want to modify or extend the codebase, you'll also work with these internal modules:
+
+```
+astro_analysis/
+├── data_processing/          # Core data processing functions
+│   ├── fits_loader.py       # FITS file loading
+│   ├── star_detection.py    # Star detection
+│   └── simbad_query.py      # Simbad database interaction
+├── utils/                    # Utility functions
+│   ├── warnings.py          # Warning configuration
+│   └── test_imports.py      # Import testing utility
+└── visualization/            # Visualization functions
+    └── plotting.py          # Plotting utilities
+```
+
+### Running the Analysis
+
+1. **Prepare your data**
+   - Place your FITS file in the `Data` directory
+   - Default location: `Data/Light_M42_180.0s_Bin1_0016.fit`
+   - Supported formats: Standard FITS files with WCS information
+
+2. **Configure settings** (optional)
+   Edit `astro_analysis/config/settings.py` to adjust:
+   ```python
+   FITS_FILE_PATH = "path/to/your/fits/file.fit"
+   SOURCE_FWHM_ESTIMATE = 5.0  # Adjust based on your image
+   DETECTION_SIGMA = 5.0       # Detection threshold
+   SIMBAD_SEARCH_RADIUS = 10   # Arcseconds
+   ```
+
+3. **Run the complete analysis**
+   ```bash
+   # From the project root directory
+   python -m astro_analysis.scripts.main
+   ```
+
+4. **Run individual scripts**
+   ```bash
+   # Load and display FITS file
+   python -m astro_analysis.scripts.load_fits
+
+   # Display a section of the image
+   python -m astro_analysis.scripts.display_section
+
+   # Detect stars
+   python -m astro_analysis.scripts.detect_stars
+
+   # Visualize stars
+   python -m astro_analysis.scripts.visualize_stars
+
+   # Create 3D visualization
+   python -m astro_analysis.scripts.visualize_3d
+   ```
+
+### Understanding the Output
+
+The analysis generates several output files:
+- `detected_stars.csv`: List of detected sources with coordinates
+- `annotated_stars.png`: Visualization of detected stars
+- `image_section.png`: Sample section of the image
+- Various statistical outputs in the console
 
 ## 🔧 Troubleshooting
 
@@ -205,7 +210,7 @@ The only requirement is that the license and copyright notice must be included i
 
 - Astropy community for their excellent documentation
 - Simbad database for providing star identification data
-- All the genius that helped answer my questions
+- All contributors who have helped improve this project
 
 ---
 

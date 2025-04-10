@@ -1,14 +1,22 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 from astropy.coordinates import SkyCoord
 
-from config.settings import *
-from utils.warnings import configure_warnings
-from data_processing.fits_loader import load_fits_file
-from data_processing.star_detection import estimate_background, detect_sources
-from data_processing.simbad_query import query_simbad
-from visualization.plotting import plot_image_with_labels
+from astro_analysis.config.settings import (
+    FITS_FILE_PATH, IGNORE_WARNINGS, BACKGROUND_BOX_SIZE,
+    BACKGROUND_FILTER_SIZE, DETECTION_SIGMA, SOURCE_FWHM_ESTIMATE,
+    SIMBAD_SEARCH_RADIUS, SIMBAD_TIMEOUT, MIN_FLUX_FOR_LABELING,
+    PLOT_LABEL_FONTSIZE, PLOT_LABEL_COLOR, PLOT_CMAP
+)
+from astro_analysis.data_processing.fits_loader import load_fits_file
+from astro_analysis.data_processing.star_detection import estimate_background, detect_sources
+from astro_analysis.data_processing.simbad_query import query_simbad
+from astro_analysis.utils.warnings import configure_warnings
+from astro_analysis.visualization.plotting import plot_image_with_labels
 
-def main():
+
+def main() -> None:
+    """Run the main analysis pipeline."""
     # Configure warnings
     if IGNORE_WARNINGS:
         configure_warnings()
