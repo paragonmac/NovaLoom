@@ -13,6 +13,68 @@ This project provides a comprehensive toolkit for analyzing astronomical FITS im
 - ⚠️ Comprehensive error handling and logging
 - 📈 Statistical analysis of detected sources
 
+## 🎯 Project Goals
+
+### Short-term Goals
+- Add star information (magnitude, classification) to visualization labels
+- Implement batch processing for multiple FITS files
+- Add command-line interface for easier configuration
+- Add progress bars for long-running operations
+- Support additional output formats (PDF, SVG)
+- Implement unit tests for all functions
+- Add logging configuration file
+
+### Medium-term Goals
+- Support different star detection algorithms
+- Implement custom WCS transformations
+- Add support for different coordinate systems
+- Create a web interface for easier access
+- Add support for different telescope data formats
+- Implement machine learning for star classification
+- Add support for time-series analysis
+
+### Long-term Goals
+- Create a full-featured astronomical image processing suite
+- Support for real-time telescope data processing
+- Integration with major astronomical databases
+- Advanced photometry and astrometry tools
+- Support for different wavelength ranges
+- Automated report generation
+- Collaborative features for research teams
+
+### Simulation Goals
+
+#### Short-term Simulation Goals
+- Implement basic N-body simulation in C++ using OpenGL
+- Add support for different gravitational force models
+- Create basic visualization of particle systems
+- Implement simple collision detection
+- Add basic performance metrics and profiling
+- Support for different time integration methods
+- Basic particle system configuration files
+
+#### Medium-term Simulation Goals
+- Port to Vulkan for better performance
+- Implement GPU acceleration for force calculations
+- Add support for different particle types (stars, planets, etc.)
+- Create interactive visualization controls
+- Implement adaptive time stepping
+- Add support for different boundary conditions
+- Create simulation data export formats
+- Add basic analysis tools for simulation results
+
+#### Long-term Simulation Goals
+- Create a full-featured N-body simulation engine
+- Support for hierarchical time stepping
+- Implement advanced collision handling
+- Add support for different physical processes (gas dynamics, radiation, etc.)
+- Create a web-based visualization interface
+- Support for distributed computing
+- Integration with astronomical databases
+- Advanced analysis and visualization tools
+- Support for different coordinate systems
+- Create a plugin system for custom physics
+
 ## 🚀 Getting Started
 
 ### Prerequisites

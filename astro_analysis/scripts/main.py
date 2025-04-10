@@ -1,101 +1,151 @@
-import matplotlib.pyplot as plt
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Main script for astronomical image analysis.
+Combines functionality for loading FITS files, detecting stars, and visualizing results.
+
+TODO:
+- Add star information (magnitude, classification) to visualization labels
+- Add support for multiple FITS files in batch processing
+- Add command line arguments for configuration
+- Add progress bars for long-running operations
+- Add support for different output formats (PDF, SVG)
+- Add unit tests for all functions
+- Add logging configuration file
+- Add support for different star detection algorithms
+- Add support for custom WCS transformations
+- Add support for different coordinate systems
+"""
+
+import os
+import sys
+import logging
+import numpy as np
 import pandas as pd
-from astropy.coordinates import SkyCoord
+import matplotlib.pyplot as plt
 
-from astro_analysis.config.settings import (
-    FITS_FILE_PATH, IGNORE_WARNINGS, BACKGROUND_BOX_SIZE,
-    BACKGROUND_FILTER_SIZE, DETECTION_SIGMA, SOURCE_FWHM_ESTIMATE,
-    SIMBAD_SEARCH_RADIUS, SIMBAD_TIMEOUT, MIN_FLUX_FOR_LABELING,
-    PLOT_LABEL_FONTSIZE, PLOT_LABEL_COLOR, PLOT_CMAP
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
-from astro_analysis.data_processing.fits_loader import load_fits_file
-from astro_analysis.data_processing.star_detection import estimate_background, detect_sources
-from astro_analysis.data_processing.simbad_query import query_simbad
-from astro_analysis.utils.warnings import configure_warnings
-from astro_analysis.visualization.plotting import plot_image_with_labels
+logger = logging.getLogger(__name__)
 
+# Add the parent directory to the path so we can import from astro_analysis
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.settings import FITS_FILE_PATH
+from data_processing.fits_loader import load_fits_file
+from data_processing.star_detection import estimate_background, detect_sources
+from visualization.plotting import plot_image_with_labels
 
-def main() -> None:
-    """Run the main analysis pipeline."""
-    # Configure warnings
-    if IGNORE_WARNINGS:
-        configure_warnings()
+def display_fits_info(data, header, wcs):
+    """Display FITS file information."""
+    logger.info("Displaying FITS file information")
+    print("\nImage Data Shape:", data.shape)
+    print("\nImage Data Type:", data.dtype)
+    print("\nImage Data Range:", np.nanmin(data), "to", np.nanmax(data))
+    
+    print("\nFITS Header:")
+    for key in header.keys():
+        if key not in ['COMMENT', 'HISTORY']:
+            print(f"{key}: {header[key]}")
+    
+    print("\nWCS Information:")
+    print(wcs)
+    
+    # Display a small section of the data
+    print("\nSample of Image Data (first 5x5 pixels):")
+    print(data[0:5, 0:5])
+
+def run_star_detection(data, fwhm=3.0, threshold_factor=5.0):
+    """Run star detection on the image data."""
+    try:
+        # Estimate background and get noise level
+        logger.info("Estimating background and detecting stars")
+        box_size = (50, 50)
+        filter_size = (3, 3)
+        data_subtracted, noise_std = estimate_background(data, box_size, filter_size)
         
-    print(f"--- Processing FITS File: {FITS_FILE_PATH} ---")
-    
-    # Load FITS file
-    print("\nStep 1: Loading FITS file and WCS...")
-    data, header, wcs = load_fits_file(FITS_FILE_PATH)
-    print(f"  Using HDU (Object: {header.get('OBJECT', 'Unknown')})")
-    print(f"  Initial data shape: {data.shape}")
-    print("  WCS loaded successfully.")
-    
-    # Estimate background and detect sources
-    print("\nStep 2: Estimating background and finding sources...")
-    data_subtracted, noise_std = estimate_background(
-        data, BACKGROUND_BOX_SIZE, BACKGROUND_FILTER_SIZE
-    )
-    
-    detection_threshold = DETECTION_SIGMA * noise_std
-    print(f"  Using detection threshold: {detection_threshold:.2f}")
-    
-    sources = detect_sources(
-        data_subtracted, SOURCE_FWHM_ESTIMATE, detection_threshold
-    )
-    print(f"  Found {len(sources)} sources.")
-    
-    # Convert pixel coordinates to RA/Dec
-    print("\nStep 3: Converting pixel coordinates to RA/Dec...")
-    pixel_coords_x = sources['xcentroid']
-    pixel_coords_y = sources['ycentroid']
-    world_coords = wcs.pixel_to_world(pixel_coords_x, pixel_coords_y)
-    print(f"  Converted {len(world_coords)} coordinates.")
-    
-    # Add RA/Dec to sources table
-    sources['ra'] = world_coords.ra.deg
-    sources['dec'] = world_coords.dec.deg
-    
-    # Convert to DataFrame
-    sources_df = sources.to_pandas()
-    
-    # Query Simbad
-    print(f"\nStep 4: Querying Simbad for names...")
-    sources_df = query_simbad(
-        world_coords, sources_df, SIMBAD_SEARCH_RADIUS, 
-        SIMBAD_TIMEOUT, MIN_FLUX_FOR_LABELING
-    )
-    
-    # Create plot
-    print("\nStep 5: Generating plot...")
-    fig = plot_image_with_labels(
-        data, sources_df, wcs, header, FITS_FILE_PATH,
-        PLOT_LABEL_FONTSIZE, PLOT_LABEL_COLOR, PLOT_CMAP
-    )
-    plt.show()
-    
-    # Print identified sources
-    print("\n--- Sources with Identified Simbad Names ---")
-    identified_sources = sources_df[
-        pd.notna(sources_df['simbad_name']) & 
-        (sources_df['simbad_name'] != "Query Error")
-    ]
-    
-    if not identified_sources.empty:
-        cols_to_show = ['xcentroid', 'ycentroid', 'flux', 'ra', 'dec', 
-                       'simbad_name', 'simbad_otype']
-        cols_exist = [col for col in cols_to_show if col in identified_sources.columns]
-        rounding = {'xcentroid':1, 'ycentroid':1, 'flux':1, 'ra':5, 'dec':5}
-        rounding_applied = {k: v for k, v in rounding.items() 
-                          if k in identified_sources.columns and 
-                          pd.api.types.is_numeric_dtype(identified_sources[k])}
+        # Calculate detection threshold
+        threshold = threshold_factor * noise_std
+        print(f"\nDetection Parameters:")
+        print(f"FWHM: {fwhm}")
+        print(f"Noise std: {noise_std:.2f}")
+        print(f"Threshold: {threshold:.2f} ({threshold_factor} * {noise_std:.2f})")
         
-        pd.set_option('display.max_rows', 100)
-        pd.set_option('display.width', 120)
-        print(identified_sources[cols_exist].round(rounding_applied))
-    else:
-        print("No sources were successfully identified via Simbad.")
+        # Detect sources
+        print("\nDetecting sources...")
+        sources = detect_sources(data_subtracted, fwhm, threshold)
         
-    print("\n--- Script Finished ---")
+        # Format the output
+        for col in sources.colnames:
+            if col not in ('id', 'npix'):
+                sources[col].info.format = '%.2f'
+        
+        # Print the results
+        print(f"\nFound {len(sources)} sources:")
+        sources.pprint(max_width=76)
+        
+        # Convert to DataFrame and save to CSV
+        sources_df = sources.to_pandas()
+        csv_path = "detected_stars.csv"
+        sources_df.to_csv(csv_path, index=False)
+        logger.info(f"Saved detected stars to {csv_path}")
+        
+        return sources, sources_df
+        
+    except Exception as e:
+        logger.error(f"Error during star detection: {e}")
+        return None, None
+
+def visualize_results(data, sources_df, wcs, header):
+    """Create visualization of detected stars."""
+    try:
+        logger.info("Creating visualization of detected stars")
+        logger.warning("Star information (magnitude, classification) not yet added to labels")
+        
+        fig = plot_image_with_labels(
+            data=data,
+            sources_df=sources_df,
+            wcs=wcs,
+            header=header,
+            fits_file_path=FITS_FILE_PATH
+        )
+        
+        # Save the figure
+        output_path = "annotated_stars.png"
+        fig.savefig(output_path, dpi=300, bbox_inches='tight')
+        logger.info(f"Saved visualization to {output_path}")
+        
+        # Display the plot
+        plt.show()
+        
+    except Exception as e:
+        logger.error(f"Error during visualization: {e}")
+
+def main():
+    """Main function to run the complete analysis pipeline."""
+    try:
+        logger.info("Starting astronomical image analysis")
+        # Load the FITS file
+        print(f"Loading FITS file: {FITS_FILE_PATH}")
+        data, header, wcs = load_fits_file(FITS_FILE_PATH)
+        
+        # Display FITS information
+        display_fits_info(data, header, wcs)
+        
+        # Run star detection
+        sources, sources_df = run_star_detection(data)
+        
+        if sources_df is not None:
+            # Visualize results
+            visualize_results(data, sources_df, wcs, header)
+            
+    except FileNotFoundError:
+        logger.error(f"FITS file not found at {FITS_FILE_PATH}")
+    except Exception as e:
+        logger.error(f"Error in main pipeline: {e}")
 
 if __name__ == "__main__":
     main() 
