@@ -1,83 +1,204 @@
-# NovaLoom
+# Astronomical Image Analysis
 
-A Python toolkit tailored for students and academics to explore astronomical data through visualization, astrometric analysis, and modeling. Built with Astropy and supporting libraries, NovaLoom aims to serve as a collaborative resource emphasizing education, interactive learning, and analysis of celestial phenomena.
+This project provides a comprehensive toolkit for analyzing astronomical FITS images, detecting stars, and identifying them using the Simbad database. Whether you're a researcher, student, or astronomy enthusiast, this software will help you process and analyze astronomical images with ease.
 
-This repository currently focuses on processing astronomical FITS images, including source detection and cross-identification with known objects using Simbad.
+## 🌟 Features
 
-## Features (identify_stars_in_fits.py)
+- 📁 FITS file loading and processing
+- 🔍 Background estimation and star detection
+- 🗺️ Coordinate transformation (pixel to RA/Dec)
+- 🔎 Simbad database querying for star identification
+- 📊 Visualization with labeled sources
+- 🎨 3D surface visualization of astronomical data
+- ⚠️ Comprehensive error handling and logging
+- 📈 Statistical analysis of detected sources
 
-*   Loads astronomical FITS images.
-*   Parses World Coordinate System (WCS) information from FITS headers.
-*   Performs background estimation and subtraction.
-*   Detects star-like sources using `photutils.DAOStarFinder`.
-*   Converts detected source pixel coordinates to RA/Dec using WCS.
-*   Queries the Simbad database online to identify known objects near detected sources.
-*   Visualizes the FITS image using Matplotlib.
-*   Overlays labels with Simbad names directly onto the image plot for identified sources.
-*   Prints a table of identified sources with their coordinates and Simbad details.
+## 🚀 Getting Started
 
-## Files Included
+### Prerequisites
 
-*   **identify_stars_in_fits.py** (or your chosen script name)
-    *   A comprehensive Python script that performs the full workflow: loading FITS, finding sources, querying Simbad, and plotting results with labels.
-*   **fits_files.ipynb**
-    *   A Jupyter notebook potentially demonstrating earlier steps or alternative analyses for loading, analyzing, and visualizing FITS image files.
+Before you begin, ensure you have the following installed:
+- Python 3.8 or higher
+- Git
+- A text editor or IDE (VS Code recommended)
+- Basic understanding of astronomical FITS files
 
-## Setup & Installation (Windows Recommended)
+### Installation
 
-1.  **Install Python**: Download and install Python from [python.org](https://www.python.org/downloads/windows/). **Important:** Ensure you check the box "Add Python X.X to PATH" during installation.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd astro_analysis
+   ```
 
-2.  **Install Dependencies**: Open Command Prompt (cmd) or PowerShell and run the following command:
+2. **Set up a virtual environment** (strongly recommended)
+   ```bash
+   # On Windows:
+   python -m venv venv
+   venv\Scripts\activate
 
-    ```cmd
-    pip install numpy pandas matplotlib astropy photutils astroquery
-    ```
+   # On macOS/Linux:
+   python -m venv venv
+   source venv/bin/activate
+   ```
 
-## Usage
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### identify_stars_in_fits.py
+4. **Verify the installation**
+   ```bash
+   python -m astro_analysis.utils.test_imports
+   ```
+   This will check if all dependencies are properly installed and accessible.
 
-1.  **Configure the Script**: Open the `identify_stars_in_fits.py` file in a text editor or IDE. Modify the parameters in the **`--- Configuration ---`** section near the top:
-    *   **`fits_file_path`**: **Crucially, set this** to the full path of your input FITS file (e.g., `'C:\\Users\\YourName\\Documents\\AstroData\\M42_image.fits'`).
-    *   `source_fwhm_estimate`: Estimate the Full-Width Half-Maximum (size) of typical stars in your image, in pixels. This is vital for good source detection.
-    *   `detection_sigma`: Set the detection threshold (how many standard deviations above the background noise a source must be). Lower values find more (potentially faint or noisy) sources.
-    *   `simbad_search_radius`: Adjust the search radius (in arcseconds) for Simbad queries.
-    *   _(Optionally adjust other parameters like `min_flux_for_labeling`, plotting colors/fonts, etc.)_
+## 📋 Usage Guide
 
-2.  **Run the Script**: Navigate to the directory containing the script in your Command Prompt or PowerShell and execute:
+### 1. Preparing Your Data
 
-    ```cmd
-    python identify_stars_in_fits.py
-    ```
+1. Place your FITS file in the appropriate directory
+   - Default location: `Data/Light_M42_180.0s_Bin1_0016.fit`
+   - Supported formats: Standard FITS files with WCS information
 
-3.  **Output**: The script will print progress information to the console, display a plot of your FITS image with identified star names overlaid, and finally print a table of the identified sources to the console.
+2. Configure your settings in `config/settings.py`:
+   ```python
+   FITS_FILE_PATH = "path/to/your/fits/file.fit"
+   SOURCE_DETECTION_THRESHOLD = 3.0  # Adjust based on your image
+   SIMBAD_QUERY_RADIUS = 5.0  # Arcseconds
+   ```
 
-### fits_files.ipynb (Optional)
+### 2. Running the Analysis
 
-1.  **Launch Jupyter Notebook**: Open Command Prompt or PowerShell, navigate to the repository directory, and run:
+You can run the complete analysis pipeline using:
+```bash
+python -m astro_analysis.scripts.main
+```
 
-    ```cmd
-    jupyter notebook fits_files.ipynb
-    ```
-    This will open the notebook in your web browser.
+Or run individual components:
 
-2.  **Run Cells**: Execute the code cells within the notebook sequentially to see their individual outputs.
+1. **Load and display FITS file**
+   ```bash
+   python -m astro_analysis.scripts.load_fits
+   ```
 
-## Dependencies
+2. **Display a section of the image**
+   ```bash
+   python -m astro_analysis.scripts.display_section
+   ```
 
-*   [numpy](https://numpy.org/)
-*   [pandas](https://pandas.pydata.org/)
-*   [matplotlib](https://matplotlib.org/)
-*   [astropy](https://www.astropy.org/)
-*   [photutils](https://photutils.readthedocs.io/)
-*   [astroquery](https://astroquery.readthedocs.io/)
+3. **Detect stars**
+   ```bash
+   python -m astro_analysis.scripts.detect_stars
+   ```
 
-## Notes
+4. **Visualize detected stars**
+   ```bash
+   python -m astro_analysis.scripts.visualize_stars
+   ```
 
-*   Ensure all file paths used within the scripts are correct for your system. Use full paths if necessary.
-*   The accuracy of Simbad identifications heavily depends on the accuracy of the World Coordinate System (WCS) information in your FITS file header. If no sources are identified, consider checking or improving your image's WCS solution (plate-solving).
-*   Simbad queries require an active internet connection.
+5. **Create 3D visualization**
+   ```bash
+   python -m astro_analysis.scripts.visualize_3d
+   ```
 
-## License
+### 3. Understanding the Output
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+- The analysis will generate several output files:
+  - `detected_sources.csv`: List of detected sources with coordinates
+  - `identified_sources.csv`: Sources matched with Simbad database
+  - Various visualization plots (PNG format)
+
+## 📁 Project Structure
+
+```
+astro_analysis/
+├── config/
+│   └── settings.py         # Configuration parameters
+├── data_processing/
+│   ├── fits_loader.py      # FITS file loading and processing
+│   ├── star_detection.py   # Star detection algorithms
+│   └── simbad_query.py     # Simbad database interaction
+├── utils/
+│   ├── warnings.py         # Warning configuration
+│   └── test_imports.py     # Import testing utility
+├── visualization/
+│   └── plotting.py         # Plotting functions
+└── scripts/
+    ├── main.py            # Main analysis pipeline
+    ├── load_fits.py       # FITS file loading script
+    ├── display_section.py # Image section display
+    ├── detect_stars.py    # Star detection script
+    ├── visualize_stars.py # Star visualization
+    └── visualize_3d.py    # 3D visualization
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+1. **Import Errors**
+   - Ensure you're running commands from the project root directory
+   - Verify your virtual environment is activated
+   - Run `python -m astro_analysis.utils.test_imports` to diagnose import issues
+
+2. **FITS File Issues**
+   - Verify your FITS file has valid WCS information
+   - Check file permissions
+   - Ensure the file path in settings.py is correct
+
+3. **Simbad Query Issues**
+   - Check your internet connection
+   - Verify the query radius in settings.py
+   - Ensure the coordinates are in the correct format
+
+### Getting Help
+
+If you encounter issues:
+1. Check the error messages carefully
+2. Look for similar issues in the project's issue tracker
+3. Create a new issue with:
+   - Your Python version
+   - Operating system
+   - Complete error message
+   - Steps to reproduce the issue
+
+## 📚 Dependencies
+
+- numpy: Numerical computations
+- pandas: Data manipulation
+- matplotlib: Basic plotting
+- astropy: Astronomical data handling
+- photutils: Source detection
+- astroquery: Simbad database access
+- seaborn: Statistical visualizations
+- plotly: Interactive visualizations
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+Please ensure your code:
+- Follows PEP 8 style guidelines
+- Includes docstrings and comments
+- Has appropriate test coverage
+- Updates documentation as needed
+
+## 📄 License
+
+[Your chosen license]
+
+## 🙏 Acknowledgments
+
+- Astropy community for their excellent documentation
+- Simbad database for providing star identification data
+- All contributors who have helped improve this project
+
+---
+
+For more detailed information about specific features or advanced usage, please refer to the documentation in each module's docstrings or create an issue for specific questions.
