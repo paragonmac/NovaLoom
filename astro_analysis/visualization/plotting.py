@@ -15,7 +15,8 @@ def plot_image_with_labels(
     fits_file_path: str,
     label_fontsize: int = 7,
     label_color: str = 'cyan',
-    cmap: str = 'magma'
+    cmap: str = 'magma',
+    fig: Optional[Figure] = None
 ) -> Figure:
     """
     Create a plot of the image with labeled sources.
@@ -38,6 +39,8 @@ def plot_image_with_labels(
         Color for labels, defaults to 'cyan'
     cmap : str, optional
         Colormap for the image, defaults to 'magma'
+    fig : Figure, optional
+        Existing Matplotlib Figure to draw on. If None, a new figure is created.
         
     Returns
     -------
@@ -52,7 +55,11 @@ def plot_image_with_labels(
     - Proper WCS coordinate display if available
     - Grid lines and axis labels
     """
-    fig = plt.figure(figsize=(15, 15))
+    # Use provided figure or create a new one
+    if fig is None:
+        fig = plt.figure(figsize=(15, 15))
+    else:
+        fig.clear() # Clear the existing figure before adding new axes
     
     try:
         ax = fig.add_subplot(1, 1, 1, projection=wcs)

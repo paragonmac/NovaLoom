@@ -1,16 +1,70 @@
+import os
+import sys
+
+# Add the project root to the Python path
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(project_root)
+
+os.environ['QT_API'] = 'pyside6'  # Force PySide6
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="qdarkstyle")
+
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, 
                              QVBoxLayout, QHBoxLayout, QPushButton,
                              QFileDialog, QLabel, QFrame, QSplitter,
                              QTabWidget, QStatusBar, QDialog, QFormLayout,
                              QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox,
-                             QLineEdit, QDialogButtonBox)
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QPalette, QColor
+                             QLineEdit, QDialogButtonBox, QTextEdit, QDockWidget)
+from PySide6.QtCore import Qt, QSize, QObject, Signal
+from PySide6.QtGui import QIcon, QPalette, QColor, QTextCursor
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg  # Use general Qt backend
 import qdarkstyle  # For dark theme support
 import lupa  # Lua interpreter
-import os
+import logging
+from io import StringIO
+import numpy as np
+import pandas as pd
+from astropy.wcs import WCS
+from astropy.io.fits import Header
+
+# Import project modules
+from astro_analysis.utils.io import read_fits
+from astro_analysis.data_processing.star_detection import detect_sources
+from astro_analysis.visualization.plotting import plot_image_with_labels
+
+class LogStream(QObject):
+    """Custom stream for redirecting stdout/stderr to the log window"""
+    newText = Signal(str)
+
+    def write(self, text):
+        self.newText.emit(str(text))
+
+    def flush(self):
+        pass
+
+class LogWindow(QTextEdit):
+    """Custom log window widget"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setLineWrapMode(QTextEdit.NoWrap)
+        self.setMaximumHeight(150)
+        self.setStyleSheet("""
+            QTextEdit {
+                background-color: #1e1e1e;
+                color: #d4d4d4;
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 10pt;
+                border: 1px solid #3c3c3c;
+            }
+        """)
+        
+    def append(self, text):
+        self.moveCursor(QTextCursor.End)
+        self.insertPlainText(text)
+        self.ensureCursorVisible()
 
 class SettingsDialog(QDialog):
     def __init__(self, settings, parent=None):
@@ -94,6 +148,16 @@ class AstroAnalysisUI(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        # Initialize data storage
+        self.fits_data = None
+        self.fits_header = None
+        self.fits_wcs = None
+        self.sources_df = None
+        
+        # Set up logging
+        self.log_window = LogWindow()
+        self.setup_logging()
+        
         # Load Lua settings
         self.lua = lupa.LuaRuntime()
         with open("astro_analysis/config/settings.lua", "r") as f:
@@ -104,7 +168,7 @@ class AstroAnalysisUI(QMainWindow):
         
         # Set application style based on theme
         if self.settings["ui"]["theme"] == "dark":
-            self.setStyleSheet(qdarkstyle.load_stylesheet())
+            self.setStyleSheet(qdarkstyle.load_stylesheet())  # Use main qdarkstyle
         elif self.settings["ui"]["theme"] == "material":
             # Apply material theme
             pass
@@ -120,7 +184,10 @@ class AstroAnalysisUI(QMainWindow):
         self.create_toolbar()
         
         # Create main content area
-        content_splitter = QSplitter(Qt.Horizontal)
+        content_splitter = QSplitter(Qt.Vertical)  # Changed to vertical splitter
+        
+        # Create top splitter for main content
+        top_splitter = QSplitter(Qt.Horizontal)
         
         # Left panel - Controls
         left_panel = QWidget()
@@ -135,10 +202,12 @@ class AstroAnalysisUI(QMainWindow):
         self.analyze_button = QPushButton("Analyze")
         self.analyze_button.setIcon(QIcon("icons/analyze.png"))
         self.analyze_button.setMinimumHeight(40)
+        self.analyze_button.setEnabled(False)  # Initially disabled
         
         self.visualize_button = QPushButton("Visualize")
         self.visualize_button.setIcon(QIcon("icons/visualize.png"))
         self.visualize_button.setMinimumHeight(40)
+        self.visualize_button.setEnabled(False)  # Initially disabled
         
         # Analysis settings group
         settings_group = QFrame()
@@ -174,12 +243,22 @@ class AstroAnalysisUI(QMainWindow):
         # Add data table/view here
         right_panel.addTab(data_tab, "Data")
         
-        # Add panels to splitter
-        content_splitter.addWidget(left_panel)
-        content_splitter.addWidget(right_panel)
-        content_splitter.setStretchFactor(1, 2)  # Right panel gets more space
+        # Add panels to top splitter
+        top_splitter.addWidget(left_panel)
+        top_splitter.addWidget(right_panel)
+        top_splitter.setStretchFactor(1, 2)  # Right panel gets more space
         
-        # Add splitter to main layout
+        # Add log window at the bottom
+        self.log_dock = QDockWidget("Log", self)
+        self.log_dock.setWidget(self.log_window)
+        self.log_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable | 
+                           QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.log_dock)
+        
+        # Add top splitter to main content splitter
+        content_splitter.addWidget(top_splitter)
+        
+        # Add content splitter to main layout
         layout.addWidget(content_splitter)
         
         # Create status bar
@@ -191,6 +270,26 @@ class AstroAnalysisUI(QMainWindow):
         self.load_button.clicked.connect(self.load_fits)
         self.analyze_button.clicked.connect(self.analyze)
         self.visualize_button.clicked.connect(self.visualize)
+        
+    def setup_logging(self):
+        """Set up logging to capture stdout/stderr and redirect to log window"""
+        # Create custom stream
+        self.log_stream = LogStream()
+        self.log_stream.newText.connect(self.log_window.append)
+        
+        # Redirect stdout and stderr
+        sys.stdout = self.log_stream
+        sys.stderr = self.log_stream
+        
+        # Set up Python logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            stream=self.log_stream
+        )
+        
+        # Log startup message
+        self.log_window.append("NovaLoom started\n")
         
     def create_toolbar(self):
         toolbar = self.addToolBar("Main Toolbar")
@@ -211,6 +310,12 @@ class AstroAnalysisUI(QMainWindow):
         settings_action = toolbar.addAction("Settings")
         settings_action.setIcon(QIcon("icons/settings.png"))
         settings_action.triggered.connect(self.show_settings)
+
+        toolbar.addSeparator()
+
+        clear_log_action = toolbar.addAction("Clear Log")
+        clear_log_action.setIcon(QIcon("icons/clear.png")) # Assuming you have a clear icon
+        clear_log_action.triggered.connect(self.clear_log)
         
     def update_settings_display(self):
         # Truncate long file paths
@@ -255,19 +360,98 @@ class AstroAnalysisUI(QMainWindow):
             self.settings["fits_file_path"] = file_path
             self.update_settings_display()
             self.statusBar.showMessage(f"Loading {file_path}...")
-            # Load and process FITS file
-            self.statusBar.showMessage("Ready")
+            logging.info(f"Loading FITS file: {file_path}")
+            
+            try:
+                # Load FITS data
+                self.fits_data, self.fits_header, self.fits_wcs = read_fits(file_path)
+                logging.info("FITS file loaded successfully")
+                
+                # Enable analyze button and disable visualize button
+                self.analyze_button.setEnabled(True)
+                self.visualize_button.setEnabled(False)
+                self.sources_df = None  # Clear previous analysis
+                
+                self.statusBar.showMessage("Ready")
+            except Exception as e:
+                logging.error(f"Error loading FITS file: {str(e)}")
+                self.statusBar.showMessage("Error loading file")
+                self.analyze_button.setEnabled(False)
+                self.visualize_button.setEnabled(False)
             
     def analyze(self):
+        if self.fits_data is None:
+            logging.error("No FITS data loaded")
+            self.statusBar.showMessage("No FITS data loaded")
+            return
+            
         self.statusBar.showMessage("Analyzing...")
-        # Run analysis with current settings
-        self.statusBar.showMessage("Analysis complete")
+        logging.info("Starting analysis...")
         
+        try:
+            # Get analysis settings
+            fwhm = self.settings["analysis"]["star_detection"]["fwhm"]
+            threshold = self.settings["analysis"]["star_detection"]["threshold_factor"]
+            
+            # Find sources
+            sources_table = detect_sources(
+                self.fits_data,
+                fwhm=fwhm,
+                threshold=threshold
+            )
+            
+            # Convert astropy Table to pandas DataFrame
+            self.sources_df = sources_table.to_pandas()
+            
+            num_sources = len(self.sources_df)
+            logging.info(f"Analysis complete. Found {num_sources} sources.")
+            
+            # Enable visualize button
+            self.visualize_button.setEnabled(True)
+            self.statusBar.showMessage("Analysis complete")
+            
+        except Exception as e:
+            logging.error(f"Error during analysis: {str(e)}")
+            self.statusBar.showMessage("Analysis failed")
+            self.visualize_button.setEnabled(False)
+            
     def visualize(self):
+        if self.fits_data is None or self.sources_df is None:
+            logging.warning("Cannot visualize: FITS data or source data missing")
+            self.statusBar.showMessage("Data missing for visualization")
+            return
+            
         self.statusBar.showMessage("Updating visualization...")
-        # Update visualization with current settings
-        self.canvas.draw()
-        self.statusBar.showMessage("Ready")
+        logging.info("Updating visualization...")
+        
+        try:
+            # Get visualization settings
+            cmap = self.settings["analysis"]["visualization"]["colormap"]
+            
+            # Create plot
+            plot_image_with_labels(
+                data=self.fits_data,
+                sources_df=self.sources_df,
+                wcs=self.fits_wcs,
+                header=self.fits_header,
+                fits_file_path=self.settings["fits_file_path"],
+                cmap=cmap,
+                fig=self.figure
+            )
+            
+            # Update canvas
+            self.canvas.draw()
+            self.statusBar.showMessage("Ready")
+            logging.info("Visualization updated")
+            
+        except Exception as e:
+            logging.error(f"Error during visualization: {str(e)}")
+            self.statusBar.showMessage("Visualization failed")
+
+    def clear_log(self):
+        """Clears the content of the log window."""
+        self.log_window.clear()
+        logging.info("Log cleared.") # Optionally log the clear action
 
 if __name__ == "__main__":
     app = QApplication([])
