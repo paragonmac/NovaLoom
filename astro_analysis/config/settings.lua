@@ -28,7 +28,8 @@ local settings = {
             colormap = "viridis",
             show_labels = true,
             label_size = 10,
-            marker_size = 5
+            marker_size = 5,
+            max_sources_display = 100  -- Maximum number of sources to display
         },
         
         -- Coordinate system

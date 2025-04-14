@@ -16,7 +16,9 @@ def plot_image_with_labels(
     label_fontsize: int = 7,
     label_color: str = 'cyan',
     cmap: str = 'magma',
-    fig: Optional[Figure] = None
+    fig: Optional[Figure] = None,
+    interpolation: str = 'nearest',
+    show_labels: bool = True
 ) -> Figure:
     """
     Create a plot of the image with labeled sources.
@@ -41,6 +43,10 @@ def plot_image_with_labels(
         Colormap for the image, defaults to 'magma'
     fig : Figure, optional
         Existing Matplotlib Figure to draw on. If None, a new figure is created.
+    interpolation : str, optional
+        Interpolation method for image display, defaults to 'nearest'
+    show_labels : bool, optional
+        Whether to show source labels, defaults to True
         
     Returns
     -------
@@ -81,25 +87,26 @@ def plot_image_with_labels(
         
     # Display image
     ax.imshow(data, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax, 
-              interpolation='nearest')
+              interpolation=interpolation)
               
-    # Add labels for sources
+    # Add labels for sources only if show_labels is True
     labeled_count = 0
-    for index, source in sources_df.iterrows():
-        # Use source ID as label if Simbad name is not available
-        label = f"Source {int(source['id'])}"
-        if 'simbad_name' in source and pd.notna(source['simbad_name']) and source['simbad_name'] != "Query Error":
-            label = source['simbad_name']
+    if show_labels:
+        for index, source in sources_df.iterrows():
+            # Use source ID as label if Simbad name is not available
+            label = f"Source {int(source['id'])}"
+            if 'simbad_name' in source and pd.notna(source['simbad_name']) and source['simbad_name'] != "Query Error":
+                label = source['simbad_name']
+                
+            x_pos = source['xcentroid']
+            y_pos = source['ycentroid']
             
-        x_pos = source['xcentroid']
-        y_pos = source['ycentroid']
-        
-        ax.text(x_pos + 5, y_pos + 5, label,
-               color=label_color, fontsize=label_fontsize,
-               ha='left', va='bottom',
-               bbox=dict(boxstyle='round,pad=0.1', fc='black', 
-                        alpha=0.5, ec='none'))
-        labeled_count += 1
+            ax.text(x_pos + 5, y_pos + 5, label,
+                   color=label_color, fontsize=label_fontsize,
+                   ha='left', va='bottom',
+                   bbox=dict(boxstyle='round,pad=0.1', fc='black', 
+                            alpha=0.5, ec='none'))
+            labeled_count += 1
             
     # Add axis labels
     if wcs_enabled:
