@@ -9,6 +9,7 @@ import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional
+from functools import wraps
 
 @dataclass
 class PerfResult:
@@ -62,3 +63,28 @@ class PerfTimer:
     def __exit__(self, exc_type, exc, tb):
         self.stop()
         return False
+
+def log_timed(label: str | None = None, level: int = logging.INFO):
+    """Decorator to log execution time of a function/method.
+
+    Parameters
+    ----------
+    label : str | None
+        Label to log; if None uses function __name__.
+    level : int
+        Logging level to emit at.
+    """
+    def decorator(func):
+        _label = label or func.__name__
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start = time.perf_counter()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                end = time.perf_counter()
+                logging.getLogger(func.__module__).log(
+                    level, f"PERF {_label} took {(end-start)*1000.0:.1f} ms"
+                )
+        return wrapper
+    return decorator

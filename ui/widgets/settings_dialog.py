@@ -2,7 +2,7 @@
 Settings dialog for NovaLoom application.
 """
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLineEdit, 
-                             QDoubleSpinBox, QSpinBox, QComboBox, QDialogButtonBox)
+                             QDoubleSpinBox, QSpinBox, QComboBox, QDialogButtonBox, QCheckBox)
 
 
 class SettingsDialog(QDialog):
@@ -66,6 +66,20 @@ class SettingsDialog(QDialog):
         self.font_size.setValue(settings["ui"]["font_size"])
         self.font_size.setRange(8, 24)
         form_layout.addRow("Font Size:", self.font_size)
+
+        # Debug flag
+        self.debug_checkbox = QCheckBox()
+        # settings may be Lua table; use getattr fallback
+        debug_value = False
+        try:
+            debug_value = bool(settings.get("debug", False))  # dict-like
+        except Exception:
+            try:
+                debug_value = bool(settings["debug"])  # Lua table style
+            except Exception:
+                debug_value = False
+        self.debug_checkbox.setChecked(debug_value)
+        form_layout.addRow("Debug Logging:", self.debug_checkbox)
         
         layout.addLayout(form_layout)
         
@@ -94,6 +108,9 @@ class SettingsDialog(QDialog):
             },
             "ui": {
                 "theme": self.theme.currentText(),
-                "font_size": self.font_size.value()
-            }
+                "font_size": self.font_size.value(),
+                # Preserve existing window size if present
+                "window_size": list(self.settings.get("ui", {}).get("window_size", [800, 600]))
+            },
+            "debug": self.debug_checkbox.isChecked()
         }

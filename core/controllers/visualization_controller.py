@@ -4,7 +4,7 @@ Visualization controller for managing plot display and interactions.
 import logging
 from matplotlib.widgets import RectangleSelector
 from astro_analysis.visualization.plotting import plot_image_with_labels
-from core.perf import time_block
+from core.perf import time_block, PerfTimer
 
 
 class VisualizationController:
@@ -134,13 +134,15 @@ class VisualizationController:
         if active_mode == 'zoom_in':
             self.zoom_center = (event.xdata, event.ydata)
             self.zoom_level = 2.0  # Fixed 2x zoom
-            self._update_zoom()
+            with PerfTimer("viz.zoom_in"):
+                self._update_zoom()
             logging.info("Zoomed in 2x")
             return True
         elif active_mode == 'zoom_out':
             self.zoom_center = (event.xdata, event.ydata)
             self.zoom_level = 0.5  # Fixed 0.5x zoom (2x out)
-            self._update_zoom()
+            with PerfTimer("viz.zoom_out"):
+                self._update_zoom()
             logging.info("Zoomed out 2x")
             return True
         
@@ -150,12 +152,13 @@ class VisualizationController:
         """Reset zoom to show entire image"""
         self.zoom_level = 1.0
         self.zoom_center = None
-        
+
         if self.original_limits is not None:
-            ax = self.figure.gca()
-            ax.set_xlim(self.original_limits[0])
-            ax.set_ylim(self.original_limits[1])
-            self.canvas.draw()
+            with PerfTimer("viz.zoom_reset"):
+                ax = self.figure.gca()
+                ax.set_xlim(self.original_limits[0])
+                ax.set_ylim(self.original_limits[1])
+                self.canvas.draw()
             logging.info("Zoom reset to full view")
             return True
         return False
@@ -171,37 +174,31 @@ class VisualizationController:
         }
     
     def _update_zoom(self):
-        """Update the plot with current zoom level"""
+        """Update the plot with current zoom level (timed internal steps)."""
         ax = self.figure.gca()
-        
-        # Get current axis limits
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        
-        # Calculate new limits based on zoom level and center
-        if self.zoom_center is not None:
-            x_center, y_center = self.zoom_center
-            x_range = (xlim[1] - xlim[0]) / self.zoom_level
-            y_range = (ylim[1] - ylim[0]) / self.zoom_level
-            
-            new_xlim = (x_center - x_range/2, x_center + x_range/2)
-            new_ylim = (y_center - y_range/2, y_center + y_range/2)
-        else:
-            # If no center point, zoom around the center of the current view
-            x_center = (xlim[0] + xlim[1]) / 2
-            y_center = (ylim[0] + ylim[1]) / 2
-            x_range = (xlim[1] - xlim[0]) / self.zoom_level
-            y_range = (ylim[1] - ylim[0]) / self.zoom_level
-            
-            new_xlim = (x_center - x_range/2, x_center + x_range/2)
-            new_ylim = (y_center - y_range/2, y_center + y_range/2)
-        
-        # Set new limits
-        ax.set_xlim(new_xlim)
-        ax.set_ylim(new_ylim)
-        
-        # Redraw the canvas
-        self.canvas.draw()
+
+        # Split measurement: compute limits vs redraw
+        with PerfTimer("viz.zoom_compute"):
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+            if self.zoom_center is not None:
+                x_center, y_center = self.zoom_center
+                x_range = (xlim[1] - xlim[0]) / self.zoom_level
+                y_range = (ylim[1] - ylim[0]) / self.zoom_level
+                new_xlim = (x_center - x_range/2, x_center + x_range/2)
+                new_ylim = (y_center - y_range/2, y_center + y_range/2)
+            else:
+                x_center = (xlim[0] + xlim[1]) / 2
+                y_center = (ylim[0] + ylim[1]) / 2
+                x_range = (xlim[1] - xlim[0]) / self.zoom_level
+                y_range = (ylim[1] - ylim[0]) / self.zoom_level
+                new_xlim = (x_center - x_range/2, x_center + x_range/2)
+                new_ylim = (y_center - y_range/2, y_center + y_range/2)
+
+        with PerfTimer("viz.zoom_draw"):
+            ax.set_xlim(new_xlim)
+            ax.set_ylim(new_ylim)
+            self.canvas.draw()
     
     def _handle_selection(self, eclick, erelease, data_manager):
         """Handle rectangle selection"""

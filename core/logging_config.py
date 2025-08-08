@@ -28,6 +28,17 @@ def init_logging(level: int = logging.INFO) -> None:
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
 
+    # Suppress extremely noisy Matplotlib font manager DEBUG logs while still allowing warnings/errors.
+    # These messages (findfont scoring for every font file) add little diagnostic value for this app
+    # and can flood the log when debug mode is enabled.
+    try:
+        fm_logger = logging.getLogger("matplotlib.font_manager")
+        # Only raise its level if it would otherwise inherit DEBUG from root.
+        if fm_logger.level == logging.NOTSET or fm_logger.level < logging.WARNING:
+            fm_logger.setLevel(logging.WARNING)  # Show warnings and above, hide debug/info
+    except Exception:
+        pass
+
     _initialized = True
 
 
