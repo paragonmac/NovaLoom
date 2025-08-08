@@ -4,6 +4,9 @@ from astroquery.simbad import Simbad
 from astropy.coordinates import SkyCoord
 from typing import List, Optional, Union
 from astropy.units import Quantity
+import logging
+
+logger = logging.getLogger(__name__)
 
 def query_simbad(
     world_coords: List[SkyCoord],
@@ -78,7 +81,7 @@ def query_simbad(
         except Exception as e:
             simbad_errors += 1
             if simbad_errors < 10:
-                print(f"Warning: Simbad query failed for source {i}: {type(e).__name__}")
+                logger.warning(f"Simbad query failed for source {i}: {type(e).__name__}")
             simbad_name = "Query Error"
             simbad_otype = "Error"
             
@@ -91,10 +94,10 @@ def query_simbad(
         # Progress indicator
         if query_count % 25 == 0 and query_count > 0:
             elapsed = time.time() - start_time
-            print(f"Queried {query_count} sources ({elapsed:.1f}s)...")
+            logger.info(f"Queried {query_count} sources ({elapsed:.1f}s)...")
             
     # Add results to DataFrame
     sources_df['simbad_name'] = star_names
     sources_df['simbad_otype'] = object_types
     
-    return sources_df 
+    return sources_df

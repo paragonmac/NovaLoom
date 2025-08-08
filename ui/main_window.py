@@ -21,6 +21,8 @@ from core.data_manager import DataManager
 from core.controllers.analysis_controller import AnalysisController
 from core.controllers.visualization_controller import VisualizationController
 from core.settings_manager import SettingsManager
+from core.enums import InteractionMode
+from core.errors import FitsLoadError, ExportError, AnalysisError
 
 
 class AstroAnalysisUI(QMainWindow):
@@ -39,7 +41,7 @@ class AstroAnalysisUI(QMainWindow):
         self._setup_event_handlers()
         
         # Initialize state
-        self.active_mode = None  # None, 'zoom_in', 'zoom_out', or 'select'
+        self.active_mode = InteractionMode.NONE
         
         # Set up resize handling
         self.resize_timer = QTimer()
@@ -196,6 +198,7 @@ class AstroAnalysisUI(QMainWindow):
         return {
             'load_fits': self.load_fits,
             'analyze': self.analyze,
+            'cancel_analysis': self.cancel_analysis,
             'toggle_zoom_in': self.toggle_zoom_in,
             'toggle_zoom_out': self.toggle_zoom_out,
             'reset_zoom': self.reset_zoom,
@@ -215,8 +218,14 @@ class AstroAnalysisUI(QMainWindow):
         if file_path:
             self.statusBar.showMessage(f"Loading {file_path}...")
             logging.info(f"Loading FITS file: {file_path}")
-            
-            success, status = self.data_manager.load_fits_file(file_path)
+            try:
+                success, status = self.data_manager.load_fits_file(file_path)
+            except FitsLoadError as e:
+                self.statusBar.showMessage("Error loading file")
+                logging.exception("FITS load failed")
+                self.analyze_button.setEnabled(False)
+                self.visualize_button.setEnabled(False)
+                return
             
             if success:
                 self.settings["fits_file_path"] = file_path
@@ -264,20 +273,22 @@ class AstroAnalysisUI(QMainWindow):
     
     def toggle_zoom_in(self):
         """Toggle zoom in mode"""
-        self._set_active_mode('zoom_in' if not self._mode_active('zoom_in') else None)
+        self._set_active_mode(InteractionMode.NONE if self._mode_active(InteractionMode.ZOOM_IN) else InteractionMode.ZOOM_IN)
     
     def toggle_zoom_out(self):
         """Toggle zoom out mode"""
-        self._set_active_mode('zoom_out' if not self._mode_active('zoom_out') else None)
+        self._set_active_mode(InteractionMode.NONE if self._mode_active(InteractionMode.ZOOM_OUT) else InteractionMode.ZOOM_OUT)
     
     def toggle_selection(self):
         """Toggle selection mode"""
-        self._set_active_mode('select' if not self._mode_active('select') else None)
+        self._set_active_mode(InteractionMode.NONE if self._mode_active(InteractionMode.SELECT) else InteractionMode.SELECT)
     
     def reset_zoom(self):
         """Reset zoom"""
         if self.viz_controller.reset_zoom():
-            self._set_active_mode(None)
+            # Exit zoom modes without forcing full re-visualization
+            self.active_mode = None
+            self.toolbar_manager.set_active_mode(None)
             self.statusBar.showMessage("Zoom reset to full view")
     
     def reset_source_selection(self):
@@ -293,8 +304,12 @@ class AstroAnalysisUI(QMainWindow):
             self, "Export Data", "", "CSV Files (*.csv)"
         )
         if file_path:
-            success, message = self.data_manager.export_data(file_path)
-            self.statusBar.showMessage(message)
+            try:
+                success, message = self.data_manager.export_data(file_path)
+                self.statusBar.showMessage(message)
+            except ExportError as e:
+                self.statusBar.showMessage(str(e))
+                logging.exception("Export failed")
     
     def show_settings(self):
         """Show settings dialog"""
@@ -311,17 +326,25 @@ class AstroAnalysisUI(QMainWindow):
         self.log_window.clear()
         logging.info("Log cleared.")
     
+    def cancel_analysis(self):
+        """Cancel the running analysis"""
+        if self.analysis_controller.is_running():
+            self.analysis_controller.cancel_analysis()
+            self.statusBar.showMessage("Cancelling analysis...")
+    
     # Helper methods
     def _set_active_mode(self, mode):
         """Set active mode and update UI"""
+        if isinstance(mode, str) or mode is None:
+            mode = InteractionMode.from_string(mode)
         self.active_mode = mode
-        self.toolbar_manager.set_active_mode(mode)
+        self.toolbar_manager.set_active_mode(mode.to_string())
         
-        if mode == 'zoom_in':
+        if mode is InteractionMode.ZOOM_IN:
             self.statusBar.showMessage("Zoom in mode active - click on image to zoom in")
-        elif mode == 'zoom_out':
+        elif mode is InteractionMode.ZOOM_OUT:
             self.statusBar.showMessage("Zoom out mode active - click on image to zoom out")
-        elif mode == 'select':
+        elif mode is InteractionMode.SELECT:
             self.statusBar.showMessage("Selection mode active - drag to select area")
             self.visualize()
         else:
@@ -330,7 +353,9 @@ class AstroAnalysisUI(QMainWindow):
     
     def _mode_active(self, mode):
         """Check if a mode is currently active"""
-        return self.active_mode == mode
+        if isinstance(mode, str):
+            mode = InteractionMode.from_string(mode)
+        return self.active_mode is mode
     
     def _on_canvas_click(self, event):
         """Handle canvas click events"""
@@ -340,10 +365,14 @@ class AstroAnalysisUI(QMainWindow):
     
     def _handle_analysis_error(self, error_msg):
         """Handle analysis errors"""
-        self.statusBar.showMessage("Analysis failed")
+        if isinstance(error_msg, str) and error_msg.startswith('AnalysisError'):
+            self.statusBar.showMessage(error_msg)
+        else:
+            self.statusBar.showMessage("Analysis failed")
         self.analyze_button.setEnabled(True)
-        self.progress_bar.hide()
-        self.statusBar.removeWidget(self.progress_bar)
+        if hasattr(self, 'progress_bar'):
+            self.progress_bar.hide()
+            self.statusBar.removeWidget(self.progress_bar)
     
     def _update_analysis_progress(self, message):
         """Update analysis progress"""

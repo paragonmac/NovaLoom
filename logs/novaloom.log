@@ -1,0 +1,119 @@
+2025-08-07 20:15:45,025 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:15:45,148 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:15:45,148 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:15:45,408 | INFO | __main__ | Application started
+2025-08-07 20:15:56,348 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-07 20:15:56,428 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-07 20:15:56,433 | INFO | root | FITS file loaded successfully
+2025-08-07 20:15:56,433 | INFO | root | Loading cached results from c:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-07 20:15:56,614 | INFO | root | Updating visualization...
+2025-08-07 20:15:56,615 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:15:58,084 | INFO | root | Visualization updated
+2025-08-07 20:16:24,789 | INFO | root | Updating visualization...
+2025-08-07 20:16:24,790 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:16:25,975 | INFO | root | Visualization updated
+2025-08-07 20:16:27,960 | INFO | root | Updating visualization...
+2025-08-07 20:16:27,960 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:16:29,164 | INFO | root | Visualization updated
+2025-08-07 20:31:22,706 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:31:22,761 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:31:22,761 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:31:22,911 | INFO | __main__ | Application started
+2025-08-07 20:31:48,031 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:31:48,087 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:31:48,087 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:31:48,243 | INFO | __main__ | Application started
+2025-08-07 20:34:41,789 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:34:41,841 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:34:41,841 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:34:42,005 | INFO | __main__ | Application started
+2025-08-07 20:34:50,204 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-07 20:34:50,275 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-07 20:34:50,279 | INFO | root | FITS file loaded successfully
+2025-08-07 20:34:50,280 | INFO | root | Loading cached results from c:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-07 20:34:50,424 | INFO | root | Updating visualization...
+2025-08-07 20:34:50,425 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:34:51,727 | INFO | root | Visualization updated
+2025-08-07 20:34:59,395 | INFO | root | Updating visualization...
+2025-08-07 20:34:59,395 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:35:00,573 | INFO | root | Visualization updated
+2025-08-07 20:35:09,503 | INFO | root | Source selection reset
+2025-08-07 20:35:09,504 | INFO | root | Updating visualization...
+2025-08-07 20:35:09,504 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:35:10,685 | INFO | root | Visualization updated
+2025-08-07 20:35:10,685 | INFO | root | Updating visualization...
+2025-08-07 20:35:10,686 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:35:11,888 | INFO | root | Visualization updated
+2025-08-07 20:35:14,272 | INFO | root | Log cleared.
+2025-08-07 20:35:16,266 | INFO | root | Updating visualization...
+2025-08-07 20:35:16,266 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:35:17,482 | INFO | root | Visualization updated
+2025-08-07 20:38:39,101 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:38:39,157 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:38:39,158 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:38:39,311 | INFO | __main__ | Application started
+2025-08-07 20:42:15,759 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:42:15,812 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:42:15,812 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:42:15,966 | INFO | __main__ | Application started
+2025-08-07 20:42:21,373 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-07 20:42:21,435 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-07 20:42:21,440 | INFO | root | FITS file loaded successfully
+2025-08-07 20:42:21,440 | INFO | root | Loading cached results from c:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-07 20:42:21,586 | INFO | root | Updating visualization...
+2025-08-07 20:42:21,586 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:42:21,770 | INFO | root | Visualization updated
+2025-08-07 20:42:25,722 | INFO | root | Updating visualization...
+2025-08-07 20:42:25,723 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:42:25,850 | INFO | root | Visualization updated
+2025-08-07 20:42:25,977 | INFO | root | Updating visualization...
+2025-08-07 20:42:25,977 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:42:26,093 | INFO | root | Visualization updated
+2025-08-07 20:42:41,838 | INFO | root | Updating visualization...
+2025-08-07 20:42:41,839 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:42:41,959 | INFO | root | Visualization updated
+2025-08-07 20:52:50,557 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:52:50,614 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:52:50,614 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:52:50,788 | INFO | __main__ | Application started
+2025-08-07 20:53:21,357 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-07 20:53:21,416 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-07 20:53:21,422 | INFO | root | FITS file loaded successfully
+2025-08-07 20:53:21,422 | INFO | root | Loading cached results from c:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-07 20:53:21,570 | INFO | root | Updating visualization...
+2025-08-07 20:53:21,571 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:53:21,754 | INFO | root | Visualization updated
+2025-08-07 20:53:21,754 | INFO | core.perf | PERF visualize.total took 183.1 ms
+2025-08-07 20:53:33,216 | INFO | root | Updating visualization...
+2025-08-07 20:53:33,218 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:53:33,340 | INFO | root | Visualization updated
+2025-08-07 20:53:33,340 | INFO | core.perf | PERF visualize.total took 122.9 ms
+2025-08-07 20:54:23,523 | INFO | root | Zoom reset to full view
+2025-08-07 20:54:49,501 | INFO | root | Log cleared.
+2025-08-07 20:56:11,274 | ERROR | root | Error initializing settings: error loading code: [string "<python>"]:1: syntax error near <eof>
+2025-08-07 20:56:11,326 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-07 20:56:11,327 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-07 20:56:11,488 | INFO | __main__ | Application started
+2025-08-07 20:57:34,415 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-07 20:57:34,477 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-07 20:57:34,482 | INFO | root | FITS file loaded successfully
+2025-08-07 20:57:34,483 | INFO | root | Loading cached results from c:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-07 20:57:34,627 | INFO | root | Updating visualization...
+2025-08-07 20:57:34,627 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:57:34,816 | INFO | root | Visualization updated
+2025-08-07 20:57:34,817 | INFO | core.perf | PERF visualize.total took 189.5 ms
+2025-08-07 20:57:39,972 | INFO | root | Zoomed in 2x
+2025-08-07 20:57:42,451 | INFO | root | Updating visualization...
+2025-08-07 20:57:42,452 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:57:42,572 | INFO | root | Visualization updated
+2025-08-07 20:57:42,572 | INFO | core.perf | PERF visualize.total took 120.5 ms
+2025-08-07 20:57:42,695 | INFO | root | Updating visualization...
+2025-08-07 20:57:42,695 | INFO | root | Displaying 100 of 100 sources
+2025-08-07 20:57:42,814 | INFO | root | Visualization updated
+2025-08-07 20:57:42,814 | INFO | core.perf | PERF visualize.total took 119.4 ms
+2025-08-07 20:57:46,716 | INFO | root | Zoomed in 2x
+2025-08-07 20:57:48,336 | INFO | root | Zoomed in 2x
+2025-08-07 20:57:49,859 | INFO | root | Zoomed in 2x
+2025-08-07 20:57:51,598 | INFO | root | Zoomed in 2x
+2025-08-07 20:57:53,359 | INFO | root | Zoomed in 2x
+2025-08-07 20:57:54,314 | INFO | root | Zoomed in 2x

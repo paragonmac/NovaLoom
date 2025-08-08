@@ -36,21 +36,25 @@ class AnalysisController:
         
         # Get analysis settings
         fwhm = settings["analysis"]["star_detection"]["fwhm"]
-        threshold = settings["analysis"]["star_detection"]["threshold_factor"]
-        
+        threshold_factor = settings["analysis"]["star_detection"]["threshold_factor"]
+
         # Create worker and thread
-        self.analysis_worker = AnalysisWorker(data_manager.fits_data, fwhm, threshold)
+        self.analysis_worker = AnalysisWorker(
+            data_manager.fits_data,
+            fwhm,
+            threshold_factor,
+        )
         self.analysis_thread = QThread()
-        
+
         # Move worker to thread
         self.analysis_worker.moveToThread(self.analysis_thread)
-        
+
         # Connect signals
         self.analysis_thread.started.connect(self.analysis_worker.run)
         self.analysis_worker.finished.connect(self.analysis_thread.quit)
         self.analysis_worker.finished.connect(self.analysis_worker.deleteLater)
         self.analysis_thread.finished.connect(self.analysis_thread.deleteLater)
-        
+
         # Connect callbacks
         if self.callbacks.get('error'):
             self.analysis_worker.error.connect(self.callbacks['error'])
@@ -58,7 +62,7 @@ class AnalysisController:
             self.analysis_worker.progress.connect(self.callbacks['progress'])
         if self.callbacks.get('result'):
             self.analysis_worker.result.connect(self.callbacks['result'])
-        
+
         # Start the thread
         self.analysis_thread.start()
         return True, "Analysis started"
@@ -66,6 +70,12 @@ class AnalysisController:
     def is_running(self):
         """Check if analysis is currently running"""
         return self.analysis_thread is not None and self.analysis_thread.isRunning()
+    
+    def cancel_analysis(self):
+        """Request cancellation of the running analysis (if any)."""
+        if self.analysis_worker and self.analysis_thread and self.analysis_thread.isRunning():
+            self.analysis_worker.cancel()
+            logging.info("Cancellation requested for analysis.")
     
     def cleanup(self):
         """Clean up resources"""

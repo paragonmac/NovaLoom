@@ -4,6 +4,9 @@ from photutils.detection import DAOStarFinder
 from photutils.background import Background2D, MedianBackground
 from typing import Tuple, Optional, Union
 from astropy.table import Table
+import logging
+
+logger = logging.getLogger(__name__)
 
 def estimate_background(
     data: np.ndarray,
@@ -53,8 +56,8 @@ def estimate_background(
         return data_subtracted, noise_std
         
     except Exception as e:
-        print(f"Warning: Background estimation failed ({e})")
-        print("Proceeding with source detection on original data.")
+        logger.warning(f"Background estimation failed: {e}")
+        logger.info("Proceeding with source detection on original data.")
         noise_std = mad_std(data[np.isfinite(data)])
         return data, noise_std
 
@@ -100,4 +103,4 @@ def detect_sources(
         return sources
         
     except Exception as e:
-        raise Exception(f"Error during source finding: {e}") 
+        raise Exception(f"Error during source finding: {e}")

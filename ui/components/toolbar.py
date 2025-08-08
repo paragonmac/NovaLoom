@@ -40,25 +40,30 @@ class ToolbarManager:
         analyze_action.setIcon(QIcon("icons/analyze.png"))
         analyze_action.triggered.connect(callbacks.get('analyze'))
         
+        cancel_action = self.toolbar.addAction("Cancel")
+        cancel_action.setIcon(QIcon("icons/clear.png"))
+        cancel_action.triggered.connect(callbacks.get('cancel_analysis'))
+        cancel_action.setToolTip("Cancel running analysis")
+        
         self.toolbar.addSeparator()
         
         # Add zoom controls
         self.zoom_in_button = QToolButton()
-        self.zoom_in_button.setIcon(QIcon("ui/NL_ZOOM_IN.png"))
+        self.zoom_in_button.setIcon(QIcon(":/icons/ui/NL_ZOOM_IN.png"))
         self.zoom_in_button.setToolTip("Enable Zoom In Mode")
         self.zoom_in_button.setCheckable(True)
         self.zoom_in_button.clicked.connect(callbacks.get('toggle_zoom_in'))
         self.toolbar.addWidget(self.zoom_in_button)
         
         self.zoom_out_button = QToolButton()
-        self.zoom_out_button.setIcon(QIcon("ui/NL_ZOOM_OUT.png"))
+        self.zoom_out_button.setIcon(QIcon(":/icons/ui/NL_ZOOM_OUT.png"))
         self.zoom_out_button.setToolTip("Enable Zoom Out Mode")
         self.zoom_out_button.setCheckable(True)
         self.zoom_out_button.clicked.connect(callbacks.get('toggle_zoom_out'))
         self.toolbar.addWidget(self.zoom_out_button)
         
         self.reset_zoom_button = QToolButton()
-        self.reset_zoom_button.setIcon(QIcon("ui/NL_ZOOM_RESET.png"))
+        self.reset_zoom_button.setIcon(QIcon(":/icons/ui/NL_ZOOM_RESET.png"))
         self.reset_zoom_button.setToolTip("Reset Zoom")
         self.reset_zoom_button.clicked.connect(callbacks.get('reset_zoom'))
         self.toolbar.addWidget(self.reset_zoom_button)

@@ -6,6 +6,9 @@ from astropy.wcs import WCS
 from astropy.io.fits import Header
 from typing import Optional, Union
 from matplotlib.figure import Figure
+import logging
+
+logger = logging.getLogger(__name__)
 
 def plot_image_with_labels(
     data: np.ndarray,
@@ -71,7 +74,7 @@ def plot_image_with_labels(
         ax = fig.add_subplot(1, 1, 1, projection=wcs)
         wcs_enabled = True
     except Exception as e:
-        print(f"Warning: Failed to create plot with WCS projection ({e})")
+        logger.warning(f"Failed to create plot with WCS projection: {e}")
         ax = fig.add_subplot(1, 1, 1)
         wcs_enabled = False
         
@@ -83,7 +86,9 @@ def plot_image_with_labels(
     else:
         vmin, vmax = 0, 1
         
-    print(f"Displaying image with colormap '{cmap}' (vmin={vmin:.2f}, vmax={vmax:.2f})")
+    logger.debug(
+        "Displaying image with colormap %s (vmin=%.2f, vmax=%.2f)", cmap, vmin, vmax
+    )
         
     # Display image
     ax.imshow(data, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax, 

@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>ui/NL_ZOOM_IN.png</file>
+    <file>ui/NL_ZOOM_OUT.png</file>
+    <file>ui/NL_ZOOM_RESET.png</file>
+  </qresource>
+</RCC>

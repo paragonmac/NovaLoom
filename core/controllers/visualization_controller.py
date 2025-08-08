@@ -4,6 +4,7 @@ Visualization controller for managing plot display and interactions.
 import logging
 from matplotlib.widgets import RectangleSelector
 from astro_analysis.visualization.plotting import plot_image_with_labels
+from core.perf import time_block
 
 
 class VisualizationController:
@@ -30,7 +31,17 @@ class VisualizationController:
         self.zoom_center = None
     
     def visualize(self, data_manager, settings, force_redraw=False, active_mode=None):
-        """Update the visualization with current data"""
+        """Update the visualization with current data.
+
+        Attempts to avoid full redraws if only zoom/pan operations occurred by
+        caching the previously rendered data & parameters. A full redraw is
+        executed only when underlying data, visualization settings, label
+        visibility, or selection changes.
+        """
+        # Normalize active_mode (may be an Enum instance)
+        if hasattr(active_mode, 'to_string'):
+            active_mode = active_mode.to_string()
+
         if not data_manager.has_fits_data or not data_manager.has_sources:
             logging.warning("Cannot visualize: FITS data or source data missing")
             return False, "Data missing for visualization"
@@ -42,72 +53,68 @@ class VisualizationController:
         logging.info("Updating visualization...")
         
         try:
-            # Get visualization settings
-            cmap = settings["analysis"]["visualization"]["colormap"]
-            max_sources = settings["analysis"]["visualization"]["max_sources_display"]
-            interpolation = settings["analysis"]["visualization"]["interpolation"]
-            
-            # Get sources to display
-            display_df = data_manager.get_display_sources(max_sources)
-            
-            # Show labels if we have selected sources or are in selection mode
-            show_labels = data_manager.has_selection or active_mode == 'select'
-            
-            # Check if we need to redraw
-            needs_redraw = force_redraw or (
-                self.plot_cache['data'] is None or
-                self.plot_cache['sources'] is not display_df or
-                self.plot_cache['cmap'] != cmap or
-                self.plot_cache['interpolation'] != interpolation or
-                self.plot_cache['show_labels'] != show_labels
-            )
-            
-            if needs_redraw:
-                # Clear the figure
-                self.figure.clear()
+            with time_block("visualize.total"):
+                # Get visualization settings
+                cmap = settings["analysis"]["visualization"]["colormap"]
+                max_sources = settings["analysis"]["visualization"]["max_sources_display"]
+                interpolation = settings["analysis"]["visualization"]["interpolation"]
                 
-                # Create plot
-                plot_image_with_labels(
-                    data=data_manager.fits_data,
-                    sources_df=display_df,
-                    wcs=data_manager.fits_wcs,
-                    header=data_manager.fits_header,
-                    fits_file_path=settings["fits_file_path"],
-                    cmap=cmap,
-                    fig=self.figure,
-                    interpolation=interpolation,
-                    show_labels=show_labels
+                # Get sources to display
+                display_df = data_manager.get_display_sources(max_sources)
+                
+                # Show labels if we have selected sources or are in selection mode
+                show_labels = data_manager.has_selection or active_mode == 'select'
+                
+                # Check if we need to redraw
+                needs_redraw = force_redraw or (
+                    self.plot_cache['data'] is None or
+                    self.plot_cache['sources'] is not display_df or
+                    self.plot_cache['cmap'] != cmap or
+                    self.plot_cache['interpolation'] != interpolation or
+                    self.plot_cache['show_labels'] != show_labels
                 )
                 
-                # Store original limits for reset
-                ax = self.figure.gca()
-                self.original_limits = (ax.get_xlim(), ax.get_ylim())
-                
-                # Add rectangle selector if in selection mode
-                if active_mode == 'select':
-                    self.rect_selector = RectangleSelector(
-                        self.figure.gca(),
-                        lambda eclick, erelease: self._handle_selection(eclick, erelease, data_manager),
-                        useblit=True,
-                        button=[1],  # Left mouse button
-                        minspanx=5, minspany=5,  # Minimum size
-                        spancoords='data',
-                        interactive=True
+                if needs_redraw:
+                    self.figure.clear()
+                    plot_image_with_labels(
+                        data=data_manager.fits_data,
+                        sources_df=display_df,
+                        wcs=data_manager.fits_wcs,
+                        header=data_manager.fits_header,
+                        fits_file_path=settings["fits_file_path"],
+                        cmap=cmap,
+                        fig=self.figure,
+                        interpolation=interpolation,
+                        show_labels=show_labels,
                     )
-                
-                # Update cache
-                self.plot_cache = {
-                    'data': data_manager.fits_data,
-                    'sources': display_df,
-                    'cmap': cmap,
-                    'interpolation': interpolation,
-                    'show_labels': show_labels
-                }
-            
-            # Update canvas
-            self.canvas.draw()
-            logging.info("Visualization updated")
-            return True, "Visualization updated"
+                    ax = self.figure.gca()
+                    self.original_limits = (ax.get_xlim(), ax.get_ylim())
+                    if active_mode == 'select':
+                        self.rect_selector = RectangleSelector(
+                            ax,
+                            lambda eclick, erelease: self._handle_selection(
+                                eclick, erelease, data_manager
+                            ),
+                            useblit=True,
+                            button=[1],
+                            minspanx=5,
+                            minspany=5,
+                            spancoords='data',
+                            interactive=True,
+                        )
+                    self.plot_cache = {
+                        'data': data_manager.fits_data,
+                        'sources': display_df,
+                        'cmap': cmap,
+                        'interpolation': interpolation,
+                        'show_labels': show_labels,
+                    }
+                    self.canvas.draw_idle()
+                else:
+                    # Lightweight refresh (e.g., label toggle already handled by full redraw logic)
+                    self.canvas.draw_idle()
+                logging.info("Visualization updated")
+                return True, "Visualization updated"
             
         except Exception as e:
             logging.error(f"Error during visualization: {str(e)}")
@@ -117,6 +124,10 @@ class VisualizationController:
     
     def handle_click(self, event, active_mode):
         """Handle mouse clicks for zooming"""
+        # Normalize active_mode if it's an Enum with to_string()
+        if hasattr(active_mode, 'to_string'):
+            active_mode = active_mode.to_string()
+
         if event.inaxes is None or active_mode is None:
             return False
         

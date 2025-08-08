@@ -5,6 +5,7 @@ import os
 import logging
 import pandas as pd
 from astro_analysis.utils.io import read_fits
+from core.errors import FitsLoadError, ExportError
 
 
 class DataManager:
@@ -43,7 +44,7 @@ class DataManager:
             
         except Exception as e:
             logging.error(f"Error loading FITS file: {str(e)}")
-            return False, str(e)
+            raise FitsLoadError(str(e))
     
     def save_analysis_results(self, results_df):
         """Save analysis results to CSV"""
@@ -60,7 +61,7 @@ class DataManager:
     def export_data(self, file_path):
         """Export current data to CSV file"""
         if self.sources_df is None:
-            return False, "No data to export"
+            raise ExportError("No data to export")
         
         try:
             self.sources_df.to_csv(file_path, index=False)
@@ -68,7 +69,7 @@ class DataManager:
             return True, f"Data exported to {file_path}"
         except Exception as e:
             logging.error(f"Error exporting data: {str(e)}")
-            return False, f"Error exporting data: {str(e)}"
+            raise ExportError(str(e))
     
     def select_sources_in_region(self, xmin, xmax, ymin, ymax):
         """Select sources within a rectangular region"""

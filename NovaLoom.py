@@ -11,10 +11,14 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="qdarkstyle")
 
 from PySide6.QtWidgets import QApplication
+import ui.resources_rc  # Ensure Qt resources are registered
 from ui.main_window import AstroAnalysisUI
+from core.logging_config import init_logging, get_logger
 
 
 if __name__ == "__main__":
+    init_logging()
+    log = get_logger(__name__)
     app = QApplication([])
     
     # Set application style
@@ -22,4 +26,5 @@ if __name__ == "__main__":
     
     window = AstroAnalysisUI()
     window.show()
+    log.info("Application started")
     app.exec()
