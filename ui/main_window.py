@@ -10,7 +10,8 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QPushButton, QFileDialog, QLabel, QFrame, QSplitter,
                              QTabWidget, QStatusBar, QDialog, QDockWidget,
-                             QProgressBar, QTableWidget, QTableWidgetItem, QApplication)
+                             QProgressBar, QTableWidget, QTableWidgetItem, QApplication,
+                             QTextEdit)
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt, QTimer
 import qdarkstyle
@@ -143,7 +144,6 @@ class AstroAnalysisUI(QMainWindow):
         self._apply_debug_logging(debug_enabled)
         if not debug_enabled:
             self.log_dock.hide()
-        self._apply_debug_logging(debug_enabled)
     
     def _create_control_panel(self):
         """Create the left control panel"""
@@ -183,24 +183,49 @@ class AstroAnalysisUI(QMainWindow):
         return left_panel
 
     def _create_results_panel(self):
-        right_panel = QTabWidget()
-        vis_tab = QWidget()
-        vis_layout = QVBoxLayout(vis_tab)
-        self.figure = plt.figure()
-        self.canvas = FigureCanvasQTAgg(self.figure)
+        tabs = QTabWidget()
+        # Visualization tab (main sources view)
+        vis_tab = QWidget(); vis_layout = QVBoxLayout(vis_tab)
+        self.figure = plt.figure(); self.canvas = FigureCanvasQTAgg(self.figure)
         vis_layout.addWidget(self.canvas)
-        right_panel.addTab(vis_tab, "Visualization")
+        tabs.addTab(vis_tab, "Visualization")
         self.viz_controller = VisualizationController(self.figure, self.canvas)
-        data_tab = QWidget()
-        data_layout = QVBoxLayout(data_tab)
-        self.data_table = QTableWidget()
-        self.data_table.setAlternatingRowColors(True)
-        self._apply_table_style()
-        data_layout.addWidget(self.data_table)
-        right_panel.addTab(data_tab, "Data")
-        # Connect canvas now that it exists
+
+        # Data table tab
+        data_tab = QWidget(); data_layout = QVBoxLayout(data_tab)
+        self.data_table = QTableWidget(); self.data_table.setAlternatingRowColors(True)
+        self._apply_table_style(); data_layout.addWidget(self.data_table)
+        tabs.addTab(data_tab, "Data")
+
+        # FITS Info tab
+        fits_info_tab = QWidget(); fi_layout = QVBoxLayout(fits_info_tab)
+        self.fits_info_edit = QTextEdit(); self.fits_info_edit.setReadOnly(True)
+        fi_layout.addWidget(self.fits_info_edit)
+        tabs.addTab(fits_info_tab, "FITS Info")
+
+        # Section tab (own figure)
+        section_tab = QWidget(); sec_layout = QVBoxLayout(section_tab)
+        self.section_figure = plt.figure(); self.section_canvas = FigureCanvasQTAgg(self.section_figure)
+        sec_layout.addWidget(self.section_canvas)
+        tabs.addTab(section_tab, "Section")
+
+        # Stats tab
+        stats_tab = QWidget(); stats_layout = QVBoxLayout(stats_tab)
+        self.stats_edit = QTextEdit(); self.stats_edit.setReadOnly(True)
+        stats_layout.addWidget(self.stats_edit)
+        tabs.addTab(stats_tab, "Stats")
+
+        # 3D Surface tab
+        surface_tab = QWidget(); surf_layout = QVBoxLayout(surface_tab)
+        self.surface_figure = plt.figure(); self.surface_canvas = FigureCanvasQTAgg(self.surface_figure)
+        surf_layout.addWidget(self.surface_canvas)
+        tabs.addTab(surface_tab, "3D")
+
+        # Connect events
         self.canvas.mpl_connect('button_press_event', self._on_canvas_click)
-        return right_panel
+        tabs.currentChanged.connect(self._on_results_tab_changed)
+        self.results_tabs = tabs
+        return tabs
 
     def _get_toolbar_callbacks(self):
         return {
@@ -216,6 +241,112 @@ class AstroAnalysisUI(QMainWindow):
             'show_settings': self.show_settings,
             'clear_log': self.clear_log
         }
+
+    # ---- Added script feature handlers ----
+    def _require_fits(self):
+        if not self.data_manager.has_fits_data:
+            self.statusBar.showMessage("Load a FITS file first")
+            logging.warning("Action requires a loaded FITS file")
+            return False
+        return True
+
+    def _on_results_tab_changed(self, index):
+        if not self.data_manager.has_fits_data:
+            return
+        tab_name = self.results_tabs.tabText(index)
+        if tab_name == "FITS Info":
+            self._populate_fits_info()
+        elif tab_name == "Section":
+            self._show_image_section()
+        elif tab_name == "Stats":
+            self._show_section_stats()
+        elif tab_name == "3D":
+            self._show_3d_surface()
+
+    def _populate_fits_info(self):
+        if not self._require_fits():
+            return
+        header = self.data_manager.fits_header; data = self.data_manager.fits_data
+        try:
+            import numpy as np
+            rng = (float(np.nanmin(data)), float(np.nanmax(data))) if data is not None else (0,0)
+        except Exception:
+            rng = (0,0)
+        lines = [f"Shape: {getattr(data,'shape',None)}", f"DType: {getattr(data,'dtype',None)}", f"Range: {rng[0]:.2f} – {rng[1]:.2f}", "Header (first 30 keys):"]
+        shown = 0
+        for k in header.keys():
+            if k in ('COMMENT','HISTORY'): continue
+            lines.append(f"  {k}: {header[k]}")
+            shown +=1
+            if shown>=30: break
+        if hasattr(self, 'fits_info_edit'):
+            self.fits_info_edit.setPlainText("\n".join(lines))
+
+    # Dialog helper removed (replaced by tab content)
+
+    def _show_image_section(self):
+        if not self._require_fits():
+            return
+        # Simple center crop 1000x1000 or min available
+        import numpy as np
+        data = self.data_manager.fits_data
+        if data is None or data.ndim < 2:
+            self.statusBar.showMessage("Invalid FITS data for section")
+            return
+        h, w = data.shape
+        size = min(1000, h, w)
+        y0 = (h - size)//2
+        x0 = (w - size)//2
+        section = data[y0:y0+size, x0:x0+size]
+        # Draw in section canvas figure
+        if hasattr(self, 'section_figure') and hasattr(self, 'section_canvas'):
+            self.section_figure.clear()
+            ax = self.section_figure.add_subplot(111)
+            from matplotlib.colors import LogNorm
+            ax.imshow(section, origin='lower', cmap='gray', norm=LogNorm())
+            ax.set_title(f'Section {size}x{size}')
+            self.section_canvas.draw()
+        self.statusBar.showMessage("Section displayed")
+
+    def _show_section_stats(self):
+        if not self._require_fits():
+            return
+        import numpy as np
+        from astropy.stats import sigma_clipped_stats
+        data = self.data_manager.fits_data
+        h, w = data.shape
+        size = min(1000, h, w)
+        y0 = (h - size)//2
+        x0 = (w - size)//2
+        section = data[y0:y0+size, x0:x0+size]
+        mean, median, std = sigma_clipped_stats(section, sigma=3.0)
+        txt = f"Section {size}x{size}\nMean: {mean:.2f}\nMedian: {median:.2f}\nStd: {std:.2f}"
+        logging.info(txt.replace('\n',' | '))
+        if hasattr(self, 'stats_edit'):
+            self.stats_edit.setPlainText(txt)
+
+    def _show_3d_surface(self):
+        if not self._require_fits():
+            return
+        import numpy as np
+        from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+        data = self.data_manager.fits_data
+        if data is None or data.ndim < 2:
+            self.statusBar.showMessage("Invalid FITS data for 3D surface")
+            return
+        h, w = data.shape
+        size = min(300, h, w)  # smaller for performance
+        y0 = (h - size)//2
+        x0 = (w - size)//2
+        section = data[y0:y0+size, x0:x0+size]
+        if hasattr(self, 'surface_figure') and hasattr(self, 'surface_canvas'):
+            self.surface_figure.clear()
+            ax = self.surface_figure.add_subplot(111, projection='3d')
+            X, Y = np.meshgrid(range(size), range(size))
+            ax.plot_surface(X, Y, section, cmap='viridis', linewidth=0, antialiased=False)
+            ax.set_title(f'3D Surface {size}x{size}')
+            self.surface_canvas.draw()
+        self.statusBar.showMessage("3D surface displayed")
     
     # Event handler methods
     @log_timed("ui.load_fits")

@@ -1,20 +1,15 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""CLI: Detect stars using current settings (Lua) with optional overrides.
 
+Examples:
+    python -m astro_analysis.scripts.detect_stars
+    python -m astro_analysis.scripts.detect_stars --fits Data/file.fit --fwhm 4 --threshold-factor 6
 """
-Detect stars in the image section.
-"""
-
-import os
-import sys
+from __future__ import annotations
 import numpy as np
 import pandas as pd
-
-# Add the parent directory to the path so we can import from astro_analysis
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import FITS_FILE_PATH
-from data_processing.fits_loader import load_fits_file
-from data_processing.star_detection import estimate_background, detect_sources
+from ._cli_common import build_arg_parser, init_logging, load_settings, get_fits
+from astro_analysis.data_processing.star_detection import estimate_background, detect_sources  # type: ignore
 
 def run_star_detection(data: np.ndarray, fwhm: float = 3.0, threshold_factor: float = 5.0):
     """
@@ -68,13 +63,22 @@ def run_star_detection(data: np.ndarray, fwhm: float = 3.0, threshold_factor: fl
         print(f"Error during star detection: {e}")
         return None, None
 
-if __name__ == "__main__":
+def main():
+    parser = build_arg_parser("Detect stars in a FITS image")
+    args = parser.parse_args()
+    init_logging(args.debug)
+    sm = load_settings(args)
     try:
-        # Load the FITS file
-        data, header, wcs = load_fits_file(FITS_FILE_PATH)
-        
-        # Run star detection
-        sources, sources_df = run_star_detection(data)
-        
+        data, header, wcs = get_fits(sm.settings)
     except Exception as e:
-        print(f"Error: {e}") 
+        print(f"Error loading FITS: {e}")
+        return 1
+    fwhm = sm.settings['analysis']['star_detection']['fwhm']
+    thresh_factor = sm.settings['analysis']['star_detection']['threshold_factor']
+    run_star_detection(data, fwhm=fwhm, threshold_factor=thresh_factor)
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys as _sys
+    _sys.exit(main())

@@ -1,17 +1,26 @@
-# Astronomical Image Analysis
+# NovaLoom – Astronomical Image Analysis & Visualization
 
-This project provides a comprehensive toolkit for analyzing astronomical FITS images, detecting stars, and identifying them using the Simbad database. Whether you're a researcher, student, or astronomy enthusiast, this software will help you process and analyze astronomical images with ease.
+NovaLoom provides a desktop (PySide6) GUI and a collection of modular scripts for loading, analyzing, and visualizing astronomical FITS images. It supports star detection, basic catalog querying, interactive zoom / selection, and configurable visualization parameters. A Lua‑backed settings system plus rotating log capture make it easy to tune and debug workflows.
 
 ## 🌟 Features
 
-- 📁 FITS file loading and processing
+GUI (NovaLoom):
+- 🖥️ Modern PySide6 interface (run with `python NovaLoom.py`)
+- 🔄 Live settings dialog (theme, font size, detection & visualization params)
+- 🧪 Star detection & cached results reuse
+- 🔍 Interactive zoom (in/out, reset) & selection modes with performance metrics
+- 🪪 Debug logging toggle (Options → Enable Debug Logging) with live log dock
+- 🧾 Rotating log file at `logs/novaloom.log` (font manager spam suppressed)
+
+Core / Pipeline:
+- 📁 FITS file loading & caching
 - 🔍 Background estimation and star detection
-- 🗺️ Coordinate transformation (pixel to RA/Dec)
-- 🔎 Simbad database querying for star identification
-- 📊 Visualization with labeled sources
-- 🎨 3D surface visualization of astronomical data
-- ⚠️ Comprehensive error handling and logging
-- 📈 Statistical analysis of detected sources
+- 🗺️ (Planned) Coordinate transformation (pixel → RA/Dec)
+- 🔎 (Optional) Simbad database querying for star identification
+- 📊 2D visualization with configurable colormap/interpolation & source overlays
+- 🎨 3D surface visualization of data
+- 📈 Statistical summaries of detected sources
+- ⚠️ Structured error handling & performance timing instrumentation
 
 ## 🎯 Project Goals
 
@@ -109,17 +118,69 @@ Before you begin, ensure you have the following installed:
    pip install -r requirements.txt
    ```
 
-4. **Verify the installation**
+4. **Verify the installation (optional)**
    ```bash
    python -m astro_analysis.utils.test_imports
    ```
-   This will check if all dependencies are properly installed and accessible.
+   This checks that the core analysis modules import correctly.
+
+5. **Launch the GUI**
+   ```bash
+   python NovaLoom.py
+   ```
+   The main window will open. Use the toolbar or buttons to load a FITS file, analyze, and visualize results.
 
 ## 📋 Usage Guide
 
-### For End Users (Just Want to Run the Program)
+### Quick Start (GUI)
+1. Place FITS files under `Data/` (or subfolders). A sample file is included.
+2. Launch: `python NovaLoom.py`.
+3. Load a FITS file (Load FITS button). If prior analysis exists, cached results are reused.
+4. Click Analyze to run star detection (progress appears in status bar). Then Visualize.
+5. Use toolbar buttons or menu for zoom, selection, exporting CSV, or clearing logs.
+6. Open the Settings dialog (toolbar/settings icon or menu) to adjust detection parameters, visualization DPI/colormap/interpolation, theme (dark/light), font size, and debug flag.
+7. Toggle “Enable Debug Logging” in the Options menu to show/hide the log dock and capture stdout/stderr.
 
-If you just want to use the program to analyze your astronomical images, you only need to interact with these files:
+Results CSV files appear in `results/`. Log output streams to the on‑screen log dock (when debug enabled) and always to `logs/novaloom.log` (rotating handler, ~1MB per file, 3 backups). Verbose Matplotlib font manager debug lines are suppressed for readability.
+
+### Configuration (Lua Settings)
+Persistent settings live in `config/settings.lua` and are loaded / saved automatically. Example:
+```lua
+settings = {
+   debug = true,
+   fits_file_path = '',
+   analysis = {
+      star_detection = {
+         fwhm = 2.5,
+         threshold_factor = 5.0,
+      },
+      visualization = {
+         max_sources_display = 99,
+         dpi = 99,
+         interpolation = 'bilinear',
+         colormap = 'viridis',
+      },
+   },
+   ui = {
+      theme = 'dark',      -- 'dark' or 'light'
+      font_size = 10,
+      window_size = { 800, 600 },
+   },
+}
+```
+You can edit this file manually (ensure valid Lua syntax) or rely on the in‑app Settings dialog which safely merges and rewrites the file.
+
+Notable behaviors:
+- Changes via the dialog are serialized atomically (full table rewrite with validation).
+- Window size is preserved between sessions.
+- Debug toggle updates log visibility & stdout capture immediately.
+
+### Performance Metrics
+The application logs timing for major UI actions (prefixed `PERF`) and zoom operations. These appear in the log dock / log file to help diagnose slow operations.
+
+### For Script Users (Headless / CLI)
+
+If you prefer scripted workflows or headless runs, use the existing modular scripts (independent of the GUI):
 
 ```
 astro_analysis/
@@ -135,7 +196,7 @@ astro_analysis/
     └── visualize_3d.py      # Run this for 3D visualization
 ```
 
-### For Developers (Want to Modify the Code)
+### For Developers (Extending the Code)
 
 If you want to modify or extend the codebase, you'll also work with these internal modules:
 
@@ -152,7 +213,7 @@ astro_analysis/
     └── plotting.py          # Plotting utilities
 ```
 
-### Running the Analysis
+### Running the Analysis (CLI Scripts)
 
 1. **Prepare your data**
    - Place your FITS file in the `Data` directory
@@ -160,13 +221,7 @@ astro_analysis/
    - Supported formats: Standard FITS files with WCS information
 
 2. **Configure settings** (optional)
-   Edit `astro_analysis/config/settings.py` to adjust:
-   ```python
-   FITS_FILE_PATH = "path/to/your/fits/file.fit"
-   SOURCE_FWHM_ESTIMATE = 5.0  # Adjust based on your image
-   DETECTION_SIGMA = 5.0       # Detection threshold
-   SIMBAD_SEARCH_RADIUS = 10   # Arcseconds
-   ```
+   For scripts you can still directly modify parameters inside individual script files or migrate them into the Lua settings file and load them programmatically. (Legacy `settings.py` references have been superseded by `config/settings.lua` in the GUI.)
 
 3. **Run the complete analysis**
    ```bash
@@ -202,7 +257,15 @@ The analysis generates several output files:
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+### GUI Specific
+| Issue | Tips |
+|-------|------|
+| Log dock missing | Enable debug logging (Options menu) |
+| Settings not persisting | Check `config/settings.lua` for syntax errors (no trailing commas) |
+| Theme not changing | Ensure you click OK in the Settings dialog; invalid theme falls back to dark |
+| Excessive log noise | Font manager spam is suppressed; toggle debug off to reduce remaining noise |
+
+### Common Issues (Core)
 
 1. **Import Errors**
    - Ensure you're running commands from the project root directory
@@ -210,9 +273,9 @@ The analysis generates several output files:
    - Run `python -m astro_analysis.utils.test_imports` to diagnose import issues
 
 2. **FITS File Issues**
-   - Verify your FITS file has valid WCS information
-   - Check file permissions
-   - Ensure the file path in settings.py is correct
+   - Verify the FITS file has valid WCS (if required by downstream steps)
+   - Check file permissions / path correctness
+   - Confirm path stored in `settings.lua` (fits_file_path) if relying on persistence
 
 3. **Simbad Query Issues**
    - Check your internet connection
@@ -276,4 +339,4 @@ The only requirement is that the license and copyright notice must be included i
 
 ---
 
-For more detailed information about specific features or advanced usage, please refer to the documentation in each module's docstrings or create an issue for specific questions.
+For more detailed information about specific features or advanced usage, explore module docstrings, or open an issue with your scenario and environment details.

@@ -1,47 +1,22 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Unified CLI pipeline: load FITS, detect sources, visualize results.
 
+This version uses the shared Lua settings (config/settings.lua) via SettingsManager.
+Command-line overrides (fits path, fwhm, threshold factor) are supported and can
+optionally persist back into the settings file unless --no-save is passed.
 """
-Main script for astronomical image analysis.
-Combines functionality for loading FITS files, detecting stars, and visualizing results.
-
-TODO:
-- Add star information (magnitude, classification) to visualization labels
-- Add support for multiple FITS files in batch processing
-- Add command line arguments for configuration
-- Add progress bars for long-running operations
-- Add support for different output formats (PDF, SVG)
-- Add unit tests for all functions
-- Add logging configuration file
-- Add support for different star detection algorithms
-- Add support for custom WCS transformations
-- Add support for different coordinate systems
-"""
-
-import os
-import sys
+from __future__ import annotations
 import logging
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Add the parent directory to the path so we can import from astro_analysis
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import FITS_FILE_PATH
-from data_processing.fits_loader import load_fits_file
-from data_processing.star_detection import estimate_background, detect_sources
-from visualization.plotting import plot_image_with_labels
+from ._cli_common import build_arg_parser, init_logging, load_settings, get_fits
+from astro_analysis.data_processing.star_detection import estimate_background, detect_sources  # type: ignore
+from astro_analysis.visualization.plotting import plot_image_with_labels  # type: ignore
 
 def display_fits_info(data, header, wcs):
     """Display FITS file information."""
-    logger.info("Displaying FITS file information")
+    log = logging.getLogger("pipeline.fits")
+    log.info("Displaying FITS file information")
     print("\nImage Data Shape:", data.shape)
     print("\nImage Data Type:", data.dtype)
     print("\nImage Data Range:", np.nanmin(data), "to", np.nanmax(data))
@@ -60,9 +35,10 @@ def display_fits_info(data, header, wcs):
 
 def run_star_detection(data, fwhm=3.0, threshold_factor=5.0):
     """Run star detection on the image data."""
+    log = logging.getLogger("pipeline.detect")
     try:
         # Estimate background and get noise level
-        logger.info("Estimating background and detecting stars")
+        log.info("Estimating background and detecting stars")
         box_size = (50, 50)
         filter_size = (3, 3)
         data_subtracted, noise_std = estimate_background(data, box_size, filter_size)
@@ -91,61 +67,63 @@ def run_star_detection(data, fwhm=3.0, threshold_factor=5.0):
         sources_df = sources.to_pandas()
         csv_path = "detected_stars.csv"
         sources_df.to_csv(csv_path, index=False)
-        logger.info(f"Saved detected stars to {csv_path}")
+    log.info(f"Saved detected stars to {csv_path}")
         
         return sources, sources_df
         
     except Exception as e:
-        logger.error(f"Error during star detection: {e}")
+        log.error(f"Error during star detection: {e}")
         return None, None
 
-def visualize_results(data, sources_df, wcs, header):
+def visualize_results(data, sources_df, wcs, header, fits_path: str | None):
     """Create visualization of detected stars."""
+    log = logging.getLogger("pipeline.visualize")
     try:
-        logger.info("Creating visualization of detected stars")
-        logger.warning("Star information (magnitude, classification) not yet added to labels")
+        log.info("Creating visualization of detected stars")
+        log.warning("Star information (magnitude, classification) not yet added to labels")
         
         fig = plot_image_with_labels(
             data=data,
             sources_df=sources_df,
             wcs=wcs,
             header=header,
-            fits_file_path=FITS_FILE_PATH
+            fits_file_path=fits_path or ''
         )
         
         # Save the figure
         output_path = "annotated_stars.png"
         fig.savefig(output_path, dpi=300, bbox_inches='tight')
-        logger.info(f"Saved visualization to {output_path}")
+    log.info(f"Saved visualization to {output_path}")
         
         # Display the plot
         plt.show()
         
     except Exception as e:
-        logger.error(f"Error during visualization: {e}")
+        log.error(f"Error during visualization: {e}")
 
 def main():
-    """Main function to run the complete analysis pipeline."""
+    parser = build_arg_parser("Run full analysis pipeline: load, detect, visualize")
+    args = parser.parse_args()
+    init_logging(args.debug)
+    log = logging.getLogger("pipeline")
+    sm = load_settings(args)
     try:
-        logger.info("Starting astronomical image analysis")
-        # Load the FITS file
-        print(f"Loading FITS file: {FITS_FILE_PATH}")
-        data, header, wcs = load_fits_file(FITS_FILE_PATH)
-        
-        # Display FITS information
-        display_fits_info(data, header, wcs)
-        
-        # Run star detection
-        sources, sources_df = run_star_detection(data)
-        
-        if sources_df is not None:
-            # Visualize results
-            visualize_results(data, sources_df, wcs, header)
-            
-    except FileNotFoundError:
-        logger.error(f"FITS file not found at {FITS_FILE_PATH}")
+        data, header, wcs = get_fits(sm.settings)
     except Exception as e:
-        logger.error(f"Error in main pipeline: {e}")
+        log.error(f"Failed to load FITS: {e}")
+        return 1
+    log.info("Loaded FITS file")
+    display_fits_info(data, header, wcs)
 
-if __name__ == "__main__":
-    main() 
+    fwhm = sm.settings['analysis']['star_detection']['fwhm']
+    thresh_factor = sm.settings['analysis']['star_detection']['threshold_factor']
+    sources, sources_df = run_star_detection(data, fwhm=fwhm, threshold_factor=thresh_factor)
+    if sources_df is not None:
+        log.info("Visualization step starting")
+        visualize_results(data, sources_df, wcs, header, sm.settings.get('fits_file_path'))
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys as _sys
+    _sys.exit(main())

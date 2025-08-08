@@ -3342,3 +3342,62 @@
 2025-08-07 22:25:14,846 | INFO | core.perf | PERF viz.zoom_reset took 1094.3 ms
 2025-08-07 22:25:14,846 | INFO | root | Zoom reset to full view
 2025-08-07 22:25:14,847 | INFO | ui.main_window | PERF ui.reset_zoom took 1095.1 ms
+2025-08-08 17:37:26,571 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-08 17:37:26,572 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-08 17:37:26,579 | INFO | ui.main_window | Debug logging enabled
+2025-08-08 17:37:26,580 | INFO | ui.main_window | Debug logging enabled
+2025-08-08 17:37:26,986 | INFO | core.perf | PERF startup.total took 753.1 ms
+2025-08-08 17:37:26,986 | INFO | __main__ | Application started
+2025-08-08 17:37:34,355 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-08 17:37:34,426 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-08 17:37:34,432 | INFO | root | FITS file loaded successfully
+2025-08-08 17:37:34,432 | INFO | root | Loading cached results from c:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-08 17:37:34,611 | INFO | root | Updating visualization...
+2025-08-08 17:37:34,612 | INFO | root | Displaying 99 of 99 sources
+2025-08-08 17:37:34,913 | DEBUG | astro_analysis.visualization.plotting | Displaying image with colormap viridis (vmin=913.00, vmax=2710.85)
+2025-08-08 17:37:35,072 | INFO | root | Visualization updated
+2025-08-08 17:37:35,073 | INFO | core.perf | PERF visualize.total took 461.0 ms
+2025-08-08 17:37:35,073 | INFO | ui.main_window | PERF ui.visualize took 461.9 ms
+2025-08-08 17:37:35,073 | INFO | ui.main_window | PERF ui.load_fits took 3718.3 ms
+2025-08-08 17:37:47,021 | INFO | ui.main_window | PERF ui.show_settings took 2852.4 ms
+2025-08-08 17:40:33,034 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-08 17:40:33,034 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-08 17:40:33,041 | INFO | ui.main_window | Debug logging enabled
+2025-08-08 17:40:33,154 | INFO | core.perf | PERF startup.total took 359.1 ms
+2025-08-08 17:40:33,154 | INFO | __main__ | Application started
+2025-08-08 17:40:49,995 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-08 17:40:50,062 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-08 17:40:50,069 | INFO | root | FITS file loaded successfully
+2025-08-08 17:40:50,069 | INFO | root | Loading cached results from C:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-08 17:40:50,212 | INFO | root | Updating visualization...
+2025-08-08 17:40:50,212 | INFO | root | Displaying 99 of 99 sources
+2025-08-08 17:40:50,322 | DEBUG | astro_analysis.visualization.plotting | Displaying image with colormap viridis (vmin=913.00, vmax=2710.85)
+2025-08-08 17:40:50,418 | INFO | root | Visualization updated
+2025-08-08 17:40:50,419 | INFO | core.perf | PERF visualize.total took 206.6 ms
+2025-08-08 17:40:50,419 | INFO | ui.main_window | PERF ui.visualize took 207.3 ms
+2025-08-08 17:40:50,419 | INFO | ui.main_window | PERF ui.load_fits took 5203.2 ms
+2025-08-08 17:41:08,758 | INFO | root | Section 1000x1000 | Mean: 1667.80 | Median: 1606.00 | Std: 370.83
+2025-08-08 17:41:30,898 | INFO | root | Updating visualization...
+2025-08-08 17:41:30,899 | INFO | root | Displaying 99 of 99 sources
+2025-08-08 17:41:30,966 | DEBUG | astro_analysis.visualization.plotting | Displaying image with colormap viridis (vmin=913.00, vmax=2710.85)
+2025-08-08 17:41:31,018 | INFO | root | Visualization updated
+2025-08-08 17:41:31,019 | INFO | core.perf | PERF visualize.total took 120.3 ms
+2025-08-08 17:41:31,019 | INFO | ui.main_window | PERF ui.visualize took 121.6 ms
+2025-08-08 17:45:59,093 | INFO | qdarkstyle | QSS file successfully loaded.
+2025-08-08 17:45:59,094 | INFO | qdarkstyle | Found application patches to be applied.
+2025-08-08 17:45:59,101 | INFO | ui.main_window | Debug logging enabled
+2025-08-08 17:45:59,217 | INFO | core.perf | PERF startup.total took 246.9 ms
+2025-08-08 17:45:59,218 | INFO | __main__ | Application started
+2025-08-08 17:46:07,829 | INFO | root | Loading FITS file: C:/Users/trito/NovaLoom/Data/Light_M42_180.0s_Bin1_0016.fit
+2025-08-08 17:46:07,896 | WARNING | astroquery | FITSFixedWarning: 'datfix' made the change 'Set MJD-OBS to 59553.169579 from DATE-OBS'.
+2025-08-08 17:46:07,903 | INFO | root | FITS file loaded successfully
+2025-08-08 17:46:07,903 | INFO | root | Loading cached results from C:\Users\trito\NovaLoom\ui\..\results\Light_M42_180.0s_Bin1_0016_sources.csv
+2025-08-08 17:46:08,051 | INFO | root | Updating visualization...
+2025-08-08 17:46:08,052 | INFO | root | Displaying 99 of 99 sources
+2025-08-08 17:46:08,155 | DEBUG | astro_analysis.visualization.plotting | Displaying image with colormap viridis (vmin=913.00, vmax=2710.85)
+2025-08-08 17:46:08,195 | INFO | root | Visualization updated
+2025-08-08 17:46:08,196 | INFO | core.perf | PERF visualize.total took 144.1 ms
+2025-08-08 17:46:08,196 | INFO | ui.main_window | PERF ui.visualize took 145.0 ms
+2025-08-08 17:46:08,196 | INFO | ui.main_window | PERF ui.load_fits took 3045.1 ms
+2025-08-08 17:46:16,368 | INFO | root | Section 1000x1000 | Mean: 1667.80 | Median: 1606.00 | Std: 370.83
+2025-08-08 17:46:21,296 | INFO | root | Section 1000x1000 | Mean: 1667.80 | Median: 1606.00 | Std: 370.83
